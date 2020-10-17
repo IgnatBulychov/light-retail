@@ -31,13 +31,13 @@
           </v-list-item-icon>
           <v-list-item-title>Отчеты</v-list-item-title>
         </v-list-item>
-        <v-list-item color="success" link to='/dashboard/items?folder=root'>
+        <v-list-item v-if="currentUser.role == 'admin'" color="success" link to='/dashboard/items?folder=root'>
           <v-list-item-icon>
             <v-icon>mdi-package-variant</v-icon>
           </v-list-item-icon>
           <v-list-item-title>Товары</v-list-item-title>
         </v-list-item>
-        <v-list-item color="success" link to='/dashboard/settings'>
+        <v-list-item v-if="currentUser.role == 'admin'" color="success" link to='/dashboard/settings'>
           <v-list-item-icon>
             <v-icon>mdi-cogs</v-icon>
           </v-list-item-icon>
@@ -68,6 +68,11 @@
     data() {
       return {
         
+      }
+    },
+    computed: {
+      currentUser() {
+        return this.$store.state.users.currentUser
       }
     },
     methods: {

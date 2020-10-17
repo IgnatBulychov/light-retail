@@ -108,9 +108,9 @@
                   ></v-text-field>
                   
                   <v-select
-                    :items="taxSystems"
+                    :items="taxationTypes"
                     label="СНО товаров или услуг каталога"
-                    v-model="folder.SNO"
+                    v-model="folder.taxationType"
                   ></v-select>
                 </v-col>
               </v-row>
@@ -208,7 +208,7 @@
               parent: "root",
               taxSystem: null
           },
-          taxSystems: [
+          taxationTypes: [
             {
               text: 'Общая',
               value: 'osn'

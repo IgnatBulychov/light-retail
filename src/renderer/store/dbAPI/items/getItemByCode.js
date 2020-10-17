@@ -4,16 +4,20 @@ const application = remote.app
 var Datastore = require('nedb')
 var db = new Datastore({ filename: `${application.getPath('userData')}/items.db`})
 
+import { getFolderByID } from './getFolderByID';
+
 export const getItemFromBaseByCode = function(inputCode) {
   return new Promise(function(resolve, reject){  
     db.loadDatabase(function (err) {       
-      db.findOne({ code: Number(inputCode) }, function (err, doc) {
+      db.findOne({ code: Number(inputCode) }, function (err, item) {
         if (err) {
           reject(err) 
-        }     
-        console.log(doc) 
-        if (doc) {
-          resolve(doc)
+        }      
+        if (item) {
+          getFolderByID(item).then((parent) => {
+            item.taxationType = parent.taxationType
+            resolve(item)
+          })   
         } else {
           resolve(null)
         }   

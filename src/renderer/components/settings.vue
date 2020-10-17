@@ -20,62 +20,132 @@
     <v-tabs-items v-model="tab">
 
       <v-tab-item>
-        
+        <v-container fluid>
+          <v-card>
+            <v-card-title>
           <v-select
-            :items="taxSystems"
+            :items="taxationTypes"
             label="СНО по умолчанию"
-            v-model="taxSystemDefault"
+            v-model="taxationTypeDefault"
           ></v-select>  
+
+         
+            
       <v-btn class="success" @click="saveSettings()">Сохранить</v-btn>
+      </v-card-title>
+           
+          </v-card>
+               </v-container>
       </v-tab-item>
 
       <v-tab-item>
         <v-container fluid>
-           <v-tooltip bottom>
-            <template v-slot:activator="{ on, attrs }">
-              <v-btn
-                v-bind="attrs" v-on="on"
-                color="success"
-                dark
-                icon
-                @click="dilaogCreateUser = true"
+           
+          <v-card>
+            <v-card-title>
+              <v-tooltip bottom>
+                <template v-slot:activator="{ on, attrs }">
+                  <v-btn
+                    v-bind="attrs" v-on="on"
+                    color="success"
+                    dark
+                    icon
+                    @click="dialogCreateUser = true"
+                  >
+                    <v-icon>mdi-plus</v-icon> 
+                  </v-btn>
+                </template>
+                <span>Добавить пользователя</span>
+              </v-tooltip>
+              <!-- диалог создания пользователя -->
+              <v-dialog eager 
+                @keydown.esc="dialogCreateUser = false"
+                max-width="50%"
+                v-model="dialogCreateUser"  
+                v-on:click:outside="dialogCreateUser = false" 
               >
-                <v-icon>mdi-plus</v-icon> 
-              </v-btn>
-            </template>
-            <span>Добавить пользователя</span>
-          </v-tooltip>
-          
-          <div v-if="users.length">
-            <v-row>
-              <v-col cols="1">
-                #
-              </v-col>
-              <v-col cols="4">
-                Имя
-              </v-col>
-              <v-col cols="4">
-                Роль
-              </v-col>
-              <v-col cols="3">
-                Пароль
-              </v-col>
-            </v-row>
-            <v-row v-for="(user, key) in users" :key="user.id">
-              <v-col cols="1">
-                {{ key + 1 }}
-              </v-col>
-              <v-col cols="4">
-                {{ user.name }}
-              </v-col>
-              <v-col cols="4">
-                {{ user.role == 'admin' ? "Адмиистратор" : "Кассир" }}
-              </v-col>
-              <v-col cols="3">
-                {{ user.password ? user.password : 'Не задан' }}
-              </v-col>
-            </v-row>
-          </div>
+              <v-card>
+                <v-card-title>
+                  <span class="text-lg-h6">
+                    Создание нового пользователя
+                  </span>
+                  <v-spacer></v-spacer>
+                    <v-btn icon @click="dialogCreateUser = false">
+                      <v-icon>mdi-close</v-icon>
+                    </v-btn>
+                  </v-card-title>
+                  <v-card-text>
+                    <v-text-field
+                      placeholder="ФИО"
+                      v-model="user.name"
+                    ></v-text-field>      
+                    <v-select
+                      :items="roles"
+                      label="Роль"
+                      v-model="user.role"
+                    ></v-select>  
+                    <v-text-field
+                      placeholder="Пароль"
+                      type="password"
+                      v-model="user.password"
+                    ></v-text-field>     
+                  </v-card-text>
+                  <v-card-actions>                    
+                    <v-btn @click="createUser()" width="40%" height="50px" dark color="green lighten-2">
+                      Создать       
+                    </v-btn>
+                    <v-spacer></v-spacer>          
+                  </v-card-actions>
+                </v-card>
+              </v-dialog>
+              <!-- конец диалога -->
+            </v-card-title>
+            <v-card-text>
+              <div v-if="users.length">
+                <v-row>
+                  <v-col cols="1">
+                    #
+                  </v-col>
+                  <v-col cols="3">
+                    Имя
+                  </v-col>
+                  <v-col cols="3">
+                    Роль
+                  </v-col>
+                  <v-col cols="3">
+                    Пароль
+                  </v-col>
+                  <v-col cols="2">
+                    Действия
+                  </v-col>
+                </v-row>
+                <v-row v-for="(user, key) in users" :key="user.id">
+                  <v-col cols="1">
+                    {{ key + 1 }}
+                  </v-col>
+                  <v-col cols="3">
+                    {{ user.name }}
+                  </v-col>
+                  <v-col cols="3">
+                    {{ user.role == 'admin' ? "Адмиистратор" : "Кассир" }}
+                  </v-col>
+                  <v-col cols="3">
+                    {{ user.password ? user.password : 'Не задан' }}
+                  </v-col>
+                  <v-col cols="2">                    
+                    <v-tooltip bottom>
+                      <template v-slot:activator="{ on, attrs }">
+                        <v-btn v-bind="attrs" v-on="on" icon @click="removeUser(user._id)">  
+                            <v-icon class="error--text">mdi-delete-outline</v-icon>           
+                          </v-btn>
+                      </template>
+                      <span>Удалить пользователя</span>
+                    </v-tooltip>                    
+                  </v-col>
+                </v-row>
+              </div>
+            </v-card-text>
+          </v-card>
         </v-container>
           
       </v-tab-item>
@@ -197,9 +267,25 @@
         tab: null,
         dialogSelectModel: false,
         dialogSettings: false,
-        dilaogCreateUser: false,
+        dialogCreateUser: false,
         selectedFR: null,
-        taxSystems: [
+        roles: [
+          {
+            text: "Администратор",
+            value: "admin"
+          },
+           {
+            text: "Кассир",
+            value: "cashier"
+          }
+        ],
+        user: {
+          name: "",
+          role: "admin",
+          password: "",
+          vatin: null
+        },
+        taxationTypes: [
             {
               text: 'Общая',
               value: 'osn'
@@ -249,6 +335,13 @@
     methods: {
       deleteFiscalRegister(id) {
         this.$store.dispatch('fiscalRegisters/deleteFiscalRegister', id)
+      },
+      removeUser(id) {
+        this.$store.dispatch('users/removeUser', id)
+      },
+      createUser() {
+        this.$store.dispatch('users/createUser',this.user)
+        this.dialogCreateUser = false
       },
       save() {
         let app = this

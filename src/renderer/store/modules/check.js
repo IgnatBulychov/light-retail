@@ -4,8 +4,13 @@ import { getItemFromBaseByBarcode } from '../dbAPI/items/getItemByBarcode'
 const state = {
   items: [],
   activeItem: null,
+  checkSettings: {
+    type: 'sell',
+    sno: null
+  },
   alert: {
     show: false,
+    type: "success",
     text: ''
   }
 }
@@ -63,6 +68,7 @@ const mutations = {
 
 const actions = {
   getItem ({ commit, state }, inputCode) {
+    
     //проверка введеного кода на тип
     //
     return new Promise((resolve, reject) => {
@@ -79,13 +85,20 @@ const actions = {
             let clone = {}; for (let key in item) {
               clone[key] = item[key];
             }
-            console.log('??',clone)
+            
             resolve(clone)
           } else {
-            commit('quantityPlusOne', item)
+            //найдем индекс этого товара и отправим его в коммит
+            state.items.forEach(function(item, index, array) {
+              if (item.barcode == inputCode) {
+                commit('quantityPlusOne', index)
+              }
+            });            
           }  
         } else {  
           getItemFromBaseByBarcode(inputCode).then(item => {
+            // если это первый товар добавленный в чек устанавливаем СНО для всего чека
+            if (state.items.length == 1) commit('setTaxationType', item.taxationType)
             // если маркированый ждем коммит от компонента регистрации, если успешно отсканирован код
             if (item.mark) {
               resolve(item)
@@ -93,6 +106,7 @@ const actions = {
               // если товара нет в чеке назначаем ему количество равное одному
               item.quantity = 1;
               // и добавляем в state, в чек
+              
               commit('addItemToCheck', item)
             } 
           });
@@ -112,15 +126,29 @@ const actions = {
             for (let key in item) {
               clone[key] = item[key];
             }
-            console.log('??',clone)
             resolve(clone)
           } else {
-            // и увеличиваем его количество на 1
-            commit('quantityPlusOne', item)
+            //найдем индекс этого товара и отправим его в коммит
+            state.items.forEach(function(item, index, array) {
+              if (item.code == inputCode) {
+                commit('quantityPlusOne', index)
+              }
+            });  
           }  
           
         } else { 
           getItemFromBaseByCode(inputCode).then(item => {
+            // если это первый товар добавленный в чек устанавливаем СНО для всего чека
+            if (state.items.length == 1) commit('setTaxationType', item.taxationType)
+
+            if (!item) {
+              commit('setAlert',{
+                show: true,
+                type: "error",
+                text: 'Ничего не найдено'
+              })
+              return
+            }
             if (item.mark) {
               resolve(item)
             } else {

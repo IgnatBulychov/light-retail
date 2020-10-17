@@ -12,12 +12,12 @@
     
     data() {
       return {
-        version: require('vue/package.json').version
+        version: require('../../../package.json').version
       }
     },
     methods: {
       
-      }
+      } 
     
     
   }

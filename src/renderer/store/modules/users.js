@@ -1,6 +1,7 @@
 import { getUsersFromBase } from '../dbAPI/users/getUsers'
 import { createUserInBase } from '../dbAPI/users/createUser'
 import { updateUserInBase } from '../dbAPI/users/updateUser'
+import { removeUserFromBase } from '../dbAPI/users/removeUser'
 
 const state = {
   users: [],
@@ -34,6 +35,11 @@ const actions = {
   },  
   createUser ({ dispatch }, user) {
     createUserInBase(user).then(result => {
+      dispatch('getUsers')
+    });
+  },
+  removeUser ({ dispatch }, user) {
+    removeUserFromBase(user).then(result => {
       dispatch('getUsers')
     });
   },

@@ -52,6 +52,7 @@
     }
   },
   "dependencies": {
+    "@mdi/js": "^5.7.55",
     "axios": "^0.18.0",
     "nedb": "^1.8.0",
     "python-shell": "^1.0.8",

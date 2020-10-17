@@ -14,7 +14,7 @@
           v-on:keyup.38="changePosition('up')"
           v-on:keyup.40="changePosition('down')"
           @keyup.46="removeItem(activeItem)"
-          @keyup.106="inputCode = inputCode.replace(/\*/g, ''); toItemChanging()"
+          @keyup.106="inputCode = inputCode.replace(/\*/g, ''); if (!items[activeItem].mark) toItemChanging()"
         ></v-text-field>
         <v-btn class="d-none" type="submit">Submit</v-btn>
       </v-form>
@@ -73,22 +73,22 @@
                     <v-icon>{{mdiDataMatrix}}</v-icon>
                   </span>
                 </template>
+                <span>GTIN: {{ item.gtin }}</span> <br>
+                <span>S/N: {{ item.srial }}</span> <br>
                 <span>КТН: {{ item.nomenclatureCode }}</span>
               </v-tooltip>
             </div>
           </v-col>
 
           <v-col cols="3">   
-            <v-chip :class="activeItem == key ? 'gray' : ''" small :dark="activeItem == key"  text-color="white" label>
-                ✱ / Del
+            <v-chip  :class="activeItem == key ? 'gray' : ''" small :dark="activeItem == key"  text-color="white" label>
+                {{ item.mark ? "Del" : "✱/ Del" }}
             </v-chip>
-            <v-btn icon @click="activeItem = key; toItemChanging()">
-              
+            <v-btn v-if="!item.mark"  icon @click="activeItem = key; toItemChanging()">
               <v-icon class="warning--text" >mdi-pen</v-icon>         
             </v-btn>
 
-            <v-btn icon  @click="removeItem(key)">              
-              
+            <v-btn icon  @click="removeItem(key)">     
               <v-icon class="error--text">mdi-delete-outline</v-icon>           
             </v-btn>
           </v-col>
@@ -403,21 +403,27 @@
             label="Тип чека"
             v-model="checkType"
           ></v-select>     
+<div v-if="items.length">
+          <v-select
+            :items="taxationTypes"
+            label="СНО чека"
+            v-model="items[0].taxationType"
+            disabled
+          ></v-select>     
+</div>
         </v-card-text>
         <v-card-actions>    
            <v-spacer></v-spacer>
       
           <v-btn @click="saveCheckSettings()" width="40%" height="50px" dark color="green lighten-2">
-              <v-chip class="ma-2" color="gray" label dark text-color="white">
-                <v-icon> mdi-keyboard </v-icon> Enter
-              </v-chip> Сохранить       
+                Сохранить       
             </v-btn>
              <v-spacer></v-spacer>          
         </v-card-actions>
       </v-card>
     </v-dialog>
 
-    <alert :alert="alert" :timeout="5000"/>
+    <alert :alert="alert" :timeout="1000"/>
   </div>
 </template>
 
@@ -448,7 +454,7 @@ export default {
       nomenclatureCode: "",
       currentMarkItem: null,
       getFromCustomer: "",
-      checkType: null,
+      checkType: 'sell',
       checkTypes: [
         {
           text: 'Чек прихода',
@@ -467,22 +473,57 @@ export default {
           value: 'buyReturn'
         }
       ],
+      taxationTypes: [
+            {
+              text: 'Общая',
+              value: 'osn'
+            },
+            {
+              text: 'УСН Доход',
+              value: 'usnIncome'
+            },
+            {
+              text: 'УСН Доход минус Расход',
+              value: 'usnIncomeOutcome'
+            },
+            {
+              text: 'ЕНВД',
+              value: 'envd'
+            },
+            {
+              text: 'Единый сельскохозяйственный налог',
+              value: 'esn'
+            },
+            {
+              text: 'Патент',
+              value: 'patent'
+            }            
+          ],
       taxationType: null,
       quantity: "",
       quantityOfSelectedItem: "",
+      alert: {
+        show: false,
+        type: "success",
+        text: ''
+      }
     }
   },
   mounted () {
     this.$refs.barcodeInput.focus()   
   },
-  computed: {
-    
+  watch: {
+    '$store.state.check.alert': function () {
+      //клонирование во избежания вызова мутаций после выключения алерт
+      let clone = {}
+      Object.assign(clone, this.$store.state.check.alert)
+      this.alert = clone 
+    }
+  },
+  computed: {    
     activeItem() {
       return this.$store.state.check.activeItem
-    },
-    alert() {
-      return this.$store.state.check.alert
-    },
+    },  
     summ() {
       let summ = 0;
       if (this.items.length) {
@@ -531,44 +572,62 @@ export default {
       }
       app.inputCode = ""
     },
-    convert(code) {
-    
-      if (code[0] == 0 && code[1] == 1 && code[16] == 2 && code[17] == 1) {
-        let gtin = code.slice(2, 16)
-        console.log("gtin",gtin)
-        let enter = code.indexOf('\u001d')
-        let serial = code.slice(18, enter) 
-        console.log("serial",serial)
-        gtin = Number(gtin).toString(16);
-        gtin = gtin.length%2 ? "0" + gtin : gtin
-        let ascii = []
-        for (let i = 0; i < serial.length; i++) {
-          ascii.push(serial.charCodeAt(i).toString(16))          
+    convertKTN: async function (code) {
+
+      let promise = new Promise((resolve, reject) => {
+        if (code[0] == 0 && code[1] == 1 && code[16] == 2 && code[17] == 1) {
+          let gtin = code.slice(2, 16)
+          console.log("gtin",gtin)
+          let enter = code.indexOf('\u001d')
+          let serial = code.slice(18, enter) 
+          console.log("serial",serial)
+          gtin = Number(gtin).toString(16);
+          gtin = gtin.length%2 ? "0" + gtin : gtin
+          let ascii = []
+          for (let i = 0; i < serial.length; i++) {
+            ascii.push(serial.charCodeAt(i).toString(16))          
+          }
+          serial = ascii.join(' ')
+
+          let nomenclatureCode = "444d" + gtin.toString() + serial.toString()
+
+          resolve({gtin,serial,nomenclatureCode})
+          /*this.currentMarkItem.gtin =  gtin
+          this.currentMarkItem.serial = serial
+          this.currentMarkItem.nomenclatureCode = ktn*/
+
+        } else {
+          reject(null)
+          this.alert = {
+            show: true,
+            type: "error",
+            text: 'Некорректный код маркировки'
+          }
         }
-        serial = ascii.join('')
+      });
 
-        let ktn = "444d" + gtin.toString() + serial.toString()
+      let result = await promise; // будет ждать, пока промис не выполнится (*)
 
-        this.currentMarkItem.gtin =  gtin
-        this.currentMarkItem.serial = serial
-        this.currentMarkItem.nomenclatureCode = ktn
-
-      } else {
-        this.$store.commit('check/setAlert', {
-          show: true,
-          text: 'Некорректный код маркировки'
-        })
-      }
+      return result; // "готово!"
     },
     addKTN() {
-      console.log('!!', this.currentMarkItem )
-      this.convert(this.datamatrixCode)
-      this.currentMarkItem.quantity = 1
+      let app = this
+      app.convertKTN(app.datamatrixCode).then(result => {
+        app.currentMarkItem.quantity = 1    
+        app.currentMarkItem.gtin = result.gtin
+        app.currentMarkItem.serial = result.serial
+        app.currentMarkItem.nomenclatureCode = result.nomenclatureCode
+        app.$store.commit('check/addItemToCheck', app.currentMarkItem)      
+        app.currentMarkItem = null
+        app.datamatrixCode = ""
+        app.closeDialogScanDatamatrix()
+      })
+      .catch(err => {
+        app.currentMarkItem = null
+        app.datamatrixCode = ""
+        app.closeDialogScanDatamatrix()
+      })
       
-      this.$store.commit('check/addItemToCheck', this.currentMarkItem)      
-      this.currentMarkItem = null
-      this.datamatrixCode = ""
-      this.closeDialogScanDatamatrix()
     },
     removeItem(item) {
       this.$store.dispatch('check/removeItem', item)
@@ -641,6 +700,9 @@ export default {
         this.$store.dispatch('check/setQuantity', [ this.activeItem, this.quantity])
         this.closeDialogItemChanging()   
       }   
+    },
+    saveCheckSettings() {
+
     },
     closeDialogPayment() {
       this.dialogPayment = false
