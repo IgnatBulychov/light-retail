@@ -45,9 +45,15 @@
         </v-list-item>
         <v-list-item color="success" link to='/'>
           <v-list-item-icon>
-            <v-icon>---</v-icon>
+            <v-icon>mdi-account-outline</v-icon>
           </v-list-item-icon>
           <v-list-item-title>Сменить пользователя</v-list-item-title>
+        </v-list-item>
+        <v-list-item color="success" link @click="exit()">
+          <v-list-item-icon>
+            <v-icon>mdi-exit-to-app</v-icon>
+          </v-list-item-icon>
+          <v-list-item-title>Выход</v-list-item-title>
         </v-list-item>
       </v-list>
     </v-navigation-drawer>
@@ -61,7 +67,7 @@
 </template>
 
 <script>
- 
+const { app } = require('electron')
   export default {
     name: 'dashboard',
     
@@ -76,7 +82,9 @@
       }
     },
     methods: {
-
+      exit() {
+        app.quit()
+      }
     
     }
   }

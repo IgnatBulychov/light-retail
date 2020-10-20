@@ -1,12 +1,14 @@
 import { getItemsFromBase } from '../dbAPI/items/getItems'
 import { findFolderItems } from '../dbAPI/items/findFolderItems'
 import { createItemInBase } from '../dbAPI/items/createItem'
+import { updateItemInBase } from '../dbAPI/items/updateItem'
 import { removeItemsFromBase } from '../dbAPI/items/removeItems'
 
 import { getFoldersFromBase } from '../dbAPI/items/getFolders'
 import { findFolderParent } from '../dbAPI/items/findFolderParent'
 import { findFolderChildren } from '../dbAPI/items/findFolderChildren'
 import { createFolderInBase } from '../dbAPI/items/createFolder'
+import { updateFolderInBase } from '../dbAPI/items/updateFolder'
 import { removeFoldersFromBase } from '../dbAPI/items/removeFolders'
 
 const state = {
@@ -51,6 +53,12 @@ const actions = {
       dispatch('getItems', result.parent)
     });
   },
+  updateItem ({ commit, dispatch }, item) {
+    updateItemInBase(item).then(result => {
+      //узнаем родителя у обновленного товара и извлекаем товары этого каталога заново включая новичка
+      dispatch('getItems', item.parent)
+    });
+  },
   removeItems ({ commit, dispatch }, items) {
     removeItemsFromBase(items).then(result => {
       //узнаем родителя у удаленного товара(первого попавшегося) и извлекаем товары этого каталога заново
@@ -67,8 +75,12 @@ const actions = {
     createFolderInBase(folder).then(result => {
       // запрашиваем снова дочерние папки для текущего каталога, т.к. еть новичек
       dispatch('getFolders', folder.parent)
-      // нужно снова достать все каталоги, иначе кнопка назад не надет родителя
-      dispatch('getAllFolders')
+    });
+  },
+  updateFolder ({ commit, dispatch }, folder) {
+    updateFolderInBase(folder).then(result => {
+      // запрашиваем снова дочерние папки для текущего каталога, т.к. еть новичек
+      dispatch('getFolders', folder.parent)
     });
   },
   removeFolders ({ state, dispatch, commit }, folders) {

@@ -1,6 +1,7 @@
 <template>
 <div>
- Версия ПО: {{version}} 
+  LiteRetail <br>
+  Версия : {{version}} 
 </div>
 </template>
 

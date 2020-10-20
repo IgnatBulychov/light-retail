@@ -3,7 +3,7 @@
     v-model="alertObject.show"
     top 
     :color="alertObject.type" 
-    :timeout="timeout"
+    :timeout="alertObject.timeout"
   >
     {{ alertObject.text }}
     <v-btn
@@ -19,7 +19,7 @@
 <script>
 export default {
   name: 'alert',
-  props: ['alert', 'timeout'],
+  props: ['alert'],
   computed: {
     alertObject() {
       return this.alert

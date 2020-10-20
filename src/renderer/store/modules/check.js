@@ -6,11 +6,12 @@ const state = {
   activeItem: null,
   checkSettings: {
     type: 'sell',
-    sno: null
+    taxationType: null
   },
   alert: {
     show: false,
     type: "success",
+    timeout: 1000,
     text: ''
   }
 }
@@ -29,6 +30,12 @@ const mutations = {
       return
     }
     state.items[item].quantity = quantity
+  },
+  setCheckType(state, checkType) {
+    state.checkSettings.checkType = checkType
+  },
+  setTaxationType(state, taxationType) {
+    state.checkSettings.taxationType = taxationType
   },
   quantityPlusOne(state, item) {
     state.items[item].quantity++;
@@ -67,110 +74,129 @@ const mutations = {
 }
 
 const actions = {
-  getItem ({ commit, state }, inputCode) {
-    
-    //проверка введеного кода на тип
-    //
+  getItemByBarcode({ commit, state }, barcode) {
     return new Promise((resolve, reject) => {
-      if (inputCode.length == 13) {
-        //если это штрихкод
-        // проверяем есть ли в чеке такой же товар
-        if (state.items.find(item => item.barcode == inputCode)) {
-          // если есть ищем его 
-          let item = state.items.find(item => item.barcode == inputCode)
-          // и увеличиваем его количество на 1 если товар не маркированный
-          // если маркированый ждем коммит от компонента регистрации, если успешно отсканирован код
-          if (item.mark) {
-            //клонируем объект для создания независимой копии
-            let clone = {}; for (let key in item) {
-              clone[key] = item[key];
-            }
-            
-            resolve(clone)
-          } else {
-            //найдем индекс этого товара и отправим его в коммит
-            state.items.forEach(function(item, index, array) {
-              if (item.barcode == inputCode) {
-                commit('quantityPlusOne', index)
-              }
-            });            
-          }  
-        } else {  
-          getItemFromBaseByBarcode(inputCode).then(item => {
-            // если это первый товар добавленный в чек устанавливаем СНО для всего чека
-            if (state.items.length == 1) commit('setTaxationType', item.taxationType)
-            // если маркированый ждем коммит от компонента регистрации, если успешно отсканирован код
-            if (item.mark) {
-              resolve(item)
-            } else {
-              // если товара нет в чеке назначаем ему количество равное одному
-              item.quantity = 1;
-              // и добавляем в state, в чек
-              
-              commit('addItemToCheck', item)
-            } 
-          });
-        }
-      } else if (inputCode.length < 7) {
-        
-        // если это внутренний код
-        // проверяем есть ли в чеке такой же товар
-        if (state.items.find(item => item.code == inputCode)) {
-          // если есть ищем его 
-          let item = state.items.find(item => item.code == inputCode)
-          // и увеличиваем его количество на 1 если товар не маркированный
-          // если маркированый ждем коммит от компонента регистрации, если успешно отсканирован код
-          if (item.mark) {
-            //клонируем объект для создания независимой копии
-            let clone = {}; 
-            for (let key in item) {
-              clone[key] = item[key];
-            }
-            resolve(clone)
-          } else {
-            //найдем индекс этого товара и отправим его в коммит
-            state.items.forEach(function(item, index, array) {
-              if (item.code == inputCode) {
-                commit('quantityPlusOne', index)
-              }
-            });  
-          }  
+      
+      // проверяем есть ли в чеке такой же товар
+      if (state.items.find(item => item.barcodes.includes(Number(barcode)))) {
+        // если есть ищем его 
+        let item = state.items.find(item => item.barcodes.includes(Number(barcode)))
+        // и увеличиваем его количество на 1 если товар не маркированный
+        // если маркированый ждем коммит от компонента регистрации, если успешно отсканирован код
+        if (item.mark) {
+          //клонируем объект для создания независимой копии
+          let clone = {}
+          Object.assign(clone, item)
           
-        } else { 
-          getItemFromBaseByCode(inputCode).then(item => {
-            // если это первый товар добавленный в чек устанавливаем СНО для всего чека
-            if (state.items.length == 1) commit('setTaxationType', item.taxationType)
-
-            if (!item) {
-              commit('setAlert',{
-                show: true,
-                type: "error",
-                text: 'Ничего не найдено'
-              })
-              return
-            }
-            if (item.mark) {
-              resolve(item)
-            } else {
-              // если товара нет в чеке назначаем ему количество равное одному
-              item.quantity = 1;
-              // и добавляем в state, в чек
-              commit('addItemToCheck', item)
-            } 
-          });
-        }
-      } else if (inputCode.length > 14) {
-        // если это код маркировки
-        if (inputCode.length == 29) {
-          //пункт 7 инструкции ЧЗ
+          resolve(clone)
         } else {
-          
-          //пункт 6 инструкции ЧЗ
+          //найдем индекс этого товара и отправим его в коммит
+          commit('quantityPlusOne', state.items.indexOf(item))                      
         }
+      } else {  
+        getItemFromBaseByBarcode(barcode).then(item => {
 
-      }    
+          // если товар не существует
+          if (!item) {
+            commit('setAlert',{
+              show: true,
+              type: "error",
+              timeout: 2000,
+              text: 'Ничего не найдено'
+            })
+            return
+          }
+
+          // если это первый товар добавленный в чек устанавливаем СНО для всего чека
+          if (state.items.length == 0) {
+            commit('setTaxationType', item.taxationType)
+          } else if (item.taxationType != state.checkSettings.taxationType) {
+            // если это не первый товар, узнаем нет ли конфликта СНО
+            commit('setAlert', {
+              show: true,
+              type: "error",
+              timeout: 5000,
+              text: 'В чек нельзя добавлять товары с разными СНО'
+            })
+            return;
+          }
+
+          // если маркированый ждем коммит от компонента регистрации, если успешно отсканирован код
+          if (item.mark) {
+            resolve(item)
+          } else {
+            // если товара нет в чеке назначаем ему количество равное одному
+            item.quantity = 1;
+            // и добавляем в state, в чек            
+            commit('addItemToCheck', item)
+          } 
+        });
+      }
     })
-    
+  },
+  getItemByCode({ commit, state }, code) {
+    return new Promise((resolve, reject) => {
+
+      // проверяем есть ли в чеке такой же товар
+      if (state.items.find(item => item.code == code)) {
+        // если есть ищем его 
+        let item = state.items.find(item => item.code == code)
+        // и увеличиваем его количество на 1 если товар не маркированный
+        // если маркированый ждем коммит от компонента регистрации, если успешно отсканирован код
+        if (item.mark) {
+          //клонируем объект для создания независимой копии
+          let clone = {}
+          Object.assign(clone, item)
+          
+          resolve(clone)
+        } else {
+          //найдем индекс этого товара и отправим его в коммит
+          commit('quantityPlusOne', state.items.indexOf(item))                      
+        }  
+        
+      } else { 
+        getItemFromBaseByCode(code).then(item => {          
+          
+          // если товар не существует
+          if (!item) {
+            commit('setAlert',{
+              show: true,
+              type: "error",
+              timeout: 2000,
+              text: 'Ничего не найдено'
+            })
+            return
+          }
+
+          // если это первый товар добавленный в чек устанавливаем СНО для всего чека
+          if (state.items.length == 0) {
+            commit('setTaxationType', item.taxationType)
+          } else if (item.taxationType != state.checkSettings.taxationType) {
+            // если это не первый товар, узнаем нет ли конфликта СНО
+            commit('setAlert', {
+              show: true,
+              type: "error",
+              timeout: 5000,
+              text: 'В чек нельзя добавлять товары с разными СНО'
+            })
+            return;
+          }
+
+          if (item.mark) {
+            resolve(item)
+          } else {
+            // если товара нет в чеке назначаем ему количество равное одному
+            item.quantity = 1;
+            // и добавляем в state, в чек
+            commit('addItemToCheck', item)
+          } 
+        });
+      }
+
+    })
+  },
+  getItemByBarcodeWithoutScan({ commit, state }, code) {
+
   },
   setQuantity({ commit }, [ item, quantity ]) {
     commit('setQuantity', [ item, quantity ] )

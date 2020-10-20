@@ -3,7 +3,8 @@ import { createSettingsInBase } from '../dbAPI/settings/createSettings'
 import { updateSettingsInBase } from '../dbAPI/settings/updateSettings'
 
 const state = {
-  taxSystem: null,
+  taxationTypeDefault: null,
+  selectedFR: null,
   alert: {
     show: false,
     text: ''
@@ -12,24 +13,34 @@ const state = {
 
 const mutations = {
   setSettings (state, settings) {
-    state.taxSystem = settings.taxSystem
-    state.operator = settings.operator
+    state.taxationTypeDefault = settings.taxationTypeDefault
+    state.selectedFR = selectedFR
+  },
+  setTaxationTypeDefault (state, taxationTypeDefault) {
+    state.taxationTypeDefault = taxationTypeDefault
+  },
+  setSelectedFR (state, selectedFR) {
+    state.selectedFR = selectedFR
   }
 }
 
 const actions = {
-  getSettings ({ commit }) {
+  getSettings ({ commit, dispatch }) {
     getSettingsFromBase().then(settings => {
-      commit('setSettings', settings)
+      if (settings) {
+        commit('setSettings', settings)
+      } else {
+        dispatch('createSettings')
+      }      
     });
   },  
-  createSettings ({ commit, dispatch }, settings) {
-    createSettingsInBase(settings).then(result => {
+  createSettings ({ commit, dispatch }) {
+    createSettingsInBase().then(result => {
       dispatch('getSettings')
     });
   },
-  updateSettings ({ commit }, parent) {
-    updateSettingsInBase().then(settings => {
+  updateSettings ({ commit, dispatch }, settings) {
+    updateSettingsInBase(settings).then(settings => {
       dispatch('getSettings')
     });
   }

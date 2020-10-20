@@ -74,7 +74,7 @@
                   </span>
                 </template>
                 <span>GTIN: {{ item.gtin }}</span> <br>
-                <span>S/N: {{ item.srial }}</span> <br>
+                <span>S/N: {{ item.serial }}</span> <br>
                 <span>КТН: {{ item.nomenclatureCode }}</span>
               </v-tooltip>
             </div>
@@ -200,7 +200,7 @@
             label="Принято от клиента"
             v-model="getFromCustomer"
             v-on:keyup.121="toConfirmCashless()"
-            v-on:keyup.enter="printCheck()"
+            v-on:keyup.enter="printCheck('cash')"
             :rules="getFromCustomerRules"
           ></v-text-field>        
           <div v-if="(getFromCustomer-summ) > 0">
@@ -214,7 +214,7 @@
             dark
             :disabled="!items.length"
             color="green lighten-2"
-            @click="printCheck()"
+            @click="printCheck('cash')"
           >
                 <v-chip
                   class="ma-2"
@@ -261,7 +261,7 @@
       v-model="dialogConfirmСashless"  
       v-on:click:outside="getFromCustomerFocus"     
     >
-      <div tabindex="0" ref="dialogConfirmCashlessDiv" v-on:keyup.enter="printCheck()">
+      <div tabindex="0" ref="dialogConfirmCashlessDiv" v-on:keyup.enter="printCheck('electronically')">
         <v-card>
           <v-card-title>
             <h2> <span class="text-lg-h6"> К оплате {{ summ }} ₽</span> </h2>     
@@ -270,7 +270,7 @@
             <h3> Оплата по банковскому терминалу прошла успешно? </h3>
           </v-card-text>
           <v-card-actions>          
-            <v-btn @click="printCheck()" :disabled="!items.length" width="40%" height="50px" dark color="green lighten-2">
+            <v-btn @click="printCheck('electronically')" :disabled="!items.length" width="40%" height="50px" dark color="green lighten-2">
               <v-chip class="ma-2" color="gray" label dark text-color="white">
                 <v-icon> mdi-keyboard </v-icon> Enter
               </v-chip> Да         
@@ -407,7 +407,7 @@
           <v-select
             :items="taxationTypes"
             label="СНО чека"
-            v-model="items[0].taxationType"
+            v-model="taxationType"
             disabled
           ></v-select>     
 </div>
@@ -423,13 +423,16 @@
       </v-card>
     </v-dialog>
 
-    <alert :alert="alert" :timeout="1000"/>
+    <alert :alert="alert"/>
   </div>
 </template>
 
 <script>
 import { mdiDataMatrixScan } from '@mdi/js'
 import { mdiDataMatrix } from '@mdi/js'
+import { convertKTN } from './../functions/convertKTN'
+import taxationTypes from './../resources/taxationTypes'
+import checkTypes from './../resources/checkTypes'
 import addFree from './addFree'
 import addFromBase from './addFromBase'
 import Alert from '../alerts/alert'
@@ -455,55 +458,13 @@ export default {
       currentMarkItem: null,
       getFromCustomer: "",
       checkType: 'sell',
-      checkTypes: [
-        {
-          text: 'Чек прихода',
-          value: 'sell'
-        },
-        {
-          text: 'Чек расхода',
-          value: 'buy'
-        },
-        {
-          text: 'Чек возврата прихода',
-          value: 'sellReturn'
-        },
-        {
-          text: 'Чек возврата расхода',
-          value: 'buyReturn'
-        }
-      ],
-      taxationTypes: [
-            {
-              text: 'Общая',
-              value: 'osn'
-            },
-            {
-              text: 'УСН Доход',
-              value: 'usnIncome'
-            },
-            {
-              text: 'УСН Доход минус Расход',
-              value: 'usnIncomeOutcome'
-            },
-            {
-              text: 'ЕНВД',
-              value: 'envd'
-            },
-            {
-              text: 'Единый сельскохозяйственный налог',
-              value: 'esn'
-            },
-            {
-              text: 'Патент',
-              value: 'patent'
-            }            
-          ],
-      taxationType: null,
+      checkTypes,
+      taxationTypes,
       quantity: "",
       quantityOfSelectedItem: "",
       alert: {
         show: false,
+        timeout: 2000,
         type: "success",
         text: ''
       }
@@ -536,6 +497,12 @@ export default {
     items() {
         return this.$store.state.check.items
     },
+    taxationType() {
+      return this.$store.state.check.checkSettings.taxationType
+    },
+    currentUser() {
+      return this.$store.state.users.currentUser
+    },
     quantityRules() {      
       if (isNaN(Number(this.quantity))) {
         return [v => v > 0 || 'Некорректное значение']
@@ -563,56 +530,52 @@ export default {
     addItem () {
       let app = this
       if (app.inputCode !== "") {
-        app.$store.dispatch('check/getItem', this.inputCode).then(item => {
-          
+        if (app.inputCode.length == 13) {
+          // если ean13
+          app.$store.dispatch('check/getItemByBarcode', app.inputCode).then(item => {
+            // если поиск вернет маркированный товар           
             app.toScanDatamatrix()
             app.currentMarkItem = item
-          
-        })
+          })
+        } else if (app.inputCode.length < 7) {
+          // если внутренний код
+          app.$store.dispatch('check/getItemByCode', app.inputCode).then(item => {
+            // если поиск вернет маркированный товар           
+            app.toScanDatamatrix()
+            app.currentMarkItem = item
+          })
+        } else if (app.inputCode.length > 14) {
+          // если код маркировки
+          if (app.inputCode.length == 29) {
+            // если DataMatrix (пункт 7 инструкции ЧЗ)
+            app.$store.dispatch('check/getItemByBarcodeWithoutScan', app.inputCode)
+
+
+          } else {            
+            // если DataMatrix GS1 (пункт 6 инструкции ЧЗ)
+            convertKTN(app.inputCode).then(result => {
+              app.$store.dispatch('check/getItemByBarcodeWithoutScan', app.inputCode)
+              .then(result => {
+                   
+                   
+              })
+              .catch(err => {
+               
+                
+              })
+            })
+            .catch(err => {
+              app.alert = err
+            })
+          }
+        }    
       }
       app.inputCode = ""
     },
-    convertKTN: async function (code) {
-
-      let promise = new Promise((resolve, reject) => {
-        if (code[0] == 0 && code[1] == 1 && code[16] == 2 && code[17] == 1) {
-          let gtin = code.slice(2, 16)
-          console.log("gtin",gtin)
-          let enter = code.indexOf('\u001d')
-          let serial = code.slice(18, enter) 
-          console.log("serial",serial)
-          gtin = Number(gtin).toString(16);
-          gtin = gtin.length%2 ? "0" + gtin : gtin
-          let ascii = []
-          for (let i = 0; i < serial.length; i++) {
-            ascii.push(serial.charCodeAt(i).toString(16))          
-          }
-          serial = ascii.join(' ')
-
-          let nomenclatureCode = "444d" + gtin.toString() + serial.toString()
-
-          resolve({gtin,serial,nomenclatureCode})
-          /*this.currentMarkItem.gtin =  gtin
-          this.currentMarkItem.serial = serial
-          this.currentMarkItem.nomenclatureCode = ktn*/
-
-        } else {
-          reject(null)
-          this.alert = {
-            show: true,
-            type: "error",
-            text: 'Некорректный код маркировки'
-          }
-        }
-      });
-
-      let result = await promise; // будет ждать, пока промис не выполнится (*)
-
-      return result; // "готово!"
-    },
     addKTN() {
       let app = this
-      app.convertKTN(app.datamatrixCode).then(result => {
+      console.log('!!!')
+      convertKTN(app.datamatrixCode).then(result => {        
         app.currentMarkItem.quantity = 1    
         app.currentMarkItem.gtin = result.gtin
         app.currentMarkItem.serial = result.serial
@@ -625,6 +588,7 @@ export default {
       .catch(err => {
         app.currentMarkItem = null
         app.datamatrixCode = ""
+        app.alert = err
         app.closeDialogScanDatamatrix()
       })
       
@@ -642,16 +606,46 @@ export default {
       this.$store.dispatch('check/changeQuantity', [ item, changing ])      
     },
     printCheck(way) {
-      //еще проверить в обход если безнал
-      if (isNaN(Number(this.getFromCustomer))) {
-        console.log('no')
-      } else {
-        if (this.getFromCustomer == "") {
-          console.log('yes')
-        } else if (Number(this.getFromCustomer) >= Number(this.summ)) {
-          console.log('yes')          
-        }              
-      }   
+      let app = this
+
+      let check = {}
+
+      check.type = app.checkType
+      check.taxationType = app.taxationType
+      check.operator = {
+        name: "",
+        vatin: ""
+      }
+      check.operator.name = app.currentUser.name
+      check.operator.vatin = app.currentUser.vatin
+
+      check.items = app.items
+
+      check.payments = []
+
+      if (way == "electronically") {
+
+        check.payments[0] =  {
+           "type": "electronically",
+           "sum": app.summ
+        }
+          console.log(check)
+
+      } else if (way == "cash"){
+        if (isNaN(Number(this.getFromCustomer))) {
+          console.log('no')
+        } else {
+          if ((this.getFromCustomer == "") || (Number(this.getFromCustomer) >= Number(this.summ))){
+            console.log('yes')
+            check.payments[0] =  {
+              "type": "cash",
+              "sum": app.getFromCustomer
+            }
+            console.log(check)
+          }             
+        }  
+      }
+      
     },
     barcodeInputFocus() {
       let app = this

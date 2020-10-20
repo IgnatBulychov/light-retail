@@ -217,9 +217,8 @@
            
       },
       connectionTest () {  
-
         let app = this
-app.loading = true
+        app.loading = true
         app.success = ''
         app.error = ''
         let options = {
@@ -239,43 +238,22 @@ app.loading = true
             }
 
             PythonShell.run('json_task.py', options, function (err, results) {
-console.log(results)
-app.loading = false
+              console.log(results)
+              app.loading = false
               if (results[0] == 'connectionFailed') {
-             app.error = 'Нет связи с кассой'
+                app.error = 'Нет связи с кассой'
               }  else if (results[0] == 'error') {
-  app.error = 'Неверная команда'
-              }             
-              else {
-              app.serial = JSON.parse(JSON.parse(results[0])).deviceInfo.serial
-              
-              app.success = `Связь с ККТ ${JSON.parse(JSON.parse(results[0])).deviceInfo.serial} установлена` 
-            
+                app.error = 'Неверная команда'
+              } else {
+                app.serial = JSON.parse(JSON.parse(results[0])).deviceInfo.serial
+                app.success = `Связь с ККТ ${JSON.parse(JSON.parse(results[0])).deviceInfo.serial} установлена` 
               }
-
-              
             });
-/*
-        PythonShell.run('connection_test.py', app.pythonShellOptionsDEV, function (err, results) {
-          if (err) throw err;
-          
-          console.log(results[0]);
-          
-          if (results[0] == 1) {
-            
-            
-
-
-          } else {
-            app.error = 'Нет связи'
-          }
-        });*/
-
       },
       storeSettings() {
         let app = this
-        this.$store.dispatch('fiscalRegisters/addFiscalRegister', [ app.settings, app.serial ])
-        this.$emit('selected')  
+        //this.$store.dispatch('fiscalRegisters/addFiscalRegister', [ app.settings, app.serial ])
+        this.$emit('saveFiscalPrinterSettings', [ app.settings, app.serial ] )  
         this.error = ''
         this.success = ''
       },
@@ -285,7 +263,6 @@ app.loading = false
         app.makeJsonTask(task) 
       },
       connectionSuccess() {
-        
         let app = this
         app.success = ''
         app.error = ''

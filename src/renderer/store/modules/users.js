@@ -44,8 +44,9 @@ const actions = {
     });
   },
   updateUser ({ dispatch }, user) {
-    updateUserInBase().then(user => {
-      dispatch('getSettings')
+    console.log(user)
+    updateUserInBase(user).then(user => {
+      dispatch('getUsers')
     });
   }
 }

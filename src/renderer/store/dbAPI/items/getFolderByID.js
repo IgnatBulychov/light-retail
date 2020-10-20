@@ -14,7 +14,7 @@ export const getFolderByID = function(item) {
         if (doc) {
           resolve(doc)
         } else {
-          resolve([])
+          resolve(null)
         }   
       });
     });    
