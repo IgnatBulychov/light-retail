@@ -106,14 +106,11 @@
     <div class="footer-bar" >
       <v-toolbar dark color="green lighten-5">    
         <v-toolbar-items>
-          <!--          
-          <v-btn @click="dialogAddFree = true"  icon color="success">
-            <v-icon>mdi-plus</v-icon> 
-          </v-btn>
-          <v-btn @click="dialogAddFromBase = true"  icon color="success">
+          
+          <v-btn @click="dialogAddItemFromBase = true"  icon color="success">
               <v-icon>mdi-view-grid-plus</v-icon>
           </v-btn> 
-          -->
+          
           <v-tooltip top>
             <template v-slot:activator="{ on, attrs }">
               <v-btn  v-bind="attrs" v-on="on" @click="dialogCheckSettings = true" icon color="primary">
@@ -131,21 +128,12 @@
             </template>
             <span>Очистить чек</span>
           </v-tooltip>
-         
-          
 
           <v-dialog eager
-            v-model="dialogAddFree"
+            v-model="dialogAddItemFromBase"
             max-width="80%"
           >
-           <!-- <add-free></add-free> -->
-          </v-dialog>
-
-          <v-dialog eager
-            v-model="dialogAddFromBase"
-            max-width="80%"
-          >
-            <!-- <add-from-base></add-from-base> -->
+            <add-item-from-base></add-item-from-base>
           </v-dialog>
 
         </v-toolbar-items>
@@ -428,26 +416,29 @@
 </template>
 
 <script>
+const fs = require("fs");
+const remote = require('electron').remote;
+const application = remote.app;
 import { mdiDataMatrixScan } from '@mdi/js'
 import { mdiDataMatrix } from '@mdi/js'
 import { convertKTN } from './../functions/convertKTN'
+
+import { printNoFiscalCheck } from './../functions/printNoFiscalCheck'
 import taxationTypes from './../resources/taxationTypes'
 import checkTypes from './../resources/checkTypes'
-import addFree from './addFree'
-import addFromBase from './addFromBase'
+import AddItemFromBase from './add-item-from-base'
 import Alert from '../alerts/alert'
 export default {
   name: 'registration',
   components: {
-    addFromBase, addFree, Alert
+    AddItemFromBase, Alert
   },
   data() {
     return {
       mdiDataMatrixScan,
       mdiDataMatrix,
       inputCode: "",
-      dialogAddFree: false,
-      dialogAddFromBase: false,
+      dialogAddItemFromBase: false,
       dialogPayment: false,
       dialogItemChanging: false,
       dialogConfirmСashless: false,
@@ -472,6 +463,7 @@ export default {
   },
   mounted () {
     this.$refs.barcodeInput.focus()   
+    this.$store.dispatch('fiscalPrinters/getFiscalPrinters')
   },
   watch: {
     '$store.state.check.alert': function () {
@@ -524,6 +516,9 @@ export default {
          return [v => v > 0 || 'Некорректное значение']
         }              
       }      
+    },
+    currentFiscalPrinter() {
+      return this.$store.getters['fiscalPrinters/currentFiscalPrinter']
     }
   },
   methods: {
@@ -613,13 +608,31 @@ export default {
       check.type = app.checkType
       check.taxationType = app.taxationType
       check.operator = {
-        name: "",
-        vatin: ""
+        name: ""
       }
       check.operator.name = app.currentUser.name
-      check.operator.vatin = app.currentUser.vatin
+      if (app.currentUser.vatin) {
+        check.operator.vatin = app.currentUser.vatin
+      }  
 
-      check.items = app.items
+      check.items = []
+
+      app.items.forEach(item => {
+          check.items.push({
+            type: "position",
+            name: item.title,
+            price: Number(Number(item.price).toFixed(2)),
+            quantity: Number(item.quantity),
+            amount: Number(Number(item.quantity*item.price).toFixed(2)),
+            tax: {
+                type: item.tax
+            },
+            nomenclatureCode: item.nomenclatureCode,
+            //paymentMethod: "fullPrepayment"
+            paymentObject: "commodity"
+          })
+      });
+      
 
       check.payments = []
 
@@ -627,21 +640,88 @@ export default {
 
         check.payments[0] =  {
            "type": "electronically",
-           "sum": app.summ
+           "sum": Number(Number(app.summ).toFixed(2))
         }
-          console.log(check)
-
+        let nonFiscalCheck = {}
+        nonFiscalCheck.type = "nonFiscal"
+        nonFiscalCheck.items = []
+        
+        nonFiscalCheck.items.push({
+            type: "text",
+            text: "ООО Рога и Копыты",
+            alignment: "center"
+        })
+        check.items.forEach(element => {
+          nonFiscalCheck.items.push({
+            type: "text",
+            text: '---------------------------',
+            alignment: "center"
+          })
+          nonFiscalCheck.items.push({
+            type: "text",
+            text: element.name,
+          })
+          nonFiscalCheck.items.push({
+            type: "text",
+            text: element.price.toFixed(2) + " x " + element.quantity,
+          })
+          nonFiscalCheck.items.push({
+            type: "text",
+            text: " = " + Number(element.quantity*element.price).toFixed(2),
+            alignment: "right"
+          })          
+        });
+        nonFiscalCheck.items.push({
+            type: "text",
+            text: '---------------------------',
+            alignment: "center"
+        })
+        nonFiscalCheck.items.push({
+            type: "text",
+            text: 'Итого:   '+ Number(app.summ).toFixed(2)
+        })
+        nonFiscalCheck.items.push({
+            type: "text",
+            text: 'Ждем вас снова!',
+            alignment: "center"
+        })
+        
+        printNoFiscalCheck(app.pythonShellOptionsDEV(JSON.stringify(nonFiscalCheck))).then(result => {
+          app.alert = result
+        })
+        //fs.appendFile(application.getPath('userData') + "/logs/checks.txt", new Date().toLocaleString().replace(/:/g, '-') + " JSON: " + JSON.stringify(check), function (err) {})
       } else if (way == "cash"){
-        if (isNaN(Number(this.getFromCustomer))) {
-          console.log('no')
+        if (isNaN(Number(app.getFromCustomer))) {
+           
         } else {
-          if ((this.getFromCustomer == "") || (Number(this.getFromCustomer) >= Number(this.summ))){
+          if (app.getFromCustomer == "") {
+            
+            check.payments[0] =  {
+              "type": "cash",
+              "sum":  Number(Number(app.summ).toFixed(2))
+            }
+
+            check = {}
+            check.type = "reportX"
+        
+
+             printNoFiscalCheck(app.pythonShellOptionsDEV(JSON.stringify(check))).then(result => {
+              app.alert = result
+            })
+           // fs.appendFile(application.getPath('userData') + "/logs/checks.txt", new Date().toLocaleString().replace(/:/g, '-') + " JSON: " + JSON.stringify(check), function (err) {})            
+          } else if (Number(app.getFromCustomer) >= Number(app.summ)) {
             console.log('yes')
             check.payments[0] =  {
               "type": "cash",
-              "sum": app.getFromCustomer
+              "sum":  Number(Number(app.getFromCustomer).toFixed(2))
             }
-            console.log(check)
+             check = {}
+            check.type = "reportX"
+        
+             printNoFiscalCheck(app.pythonShellOptionsDEV(check)).then(result => {
+              app.alert = result
+            })
+           // fs.appendFile(application.getPath('userData') + "/logs/checks.txt", new Date().toLocaleString().replace(/:/g, '-') + " JSON: " + JSON.stringify(check), function (err) {})         
           }             
         }  
       }
@@ -725,6 +805,33 @@ export default {
       let app = this
       setTimeout(function() { app.$refs.barcodeInput.focus() }, 1)
       this.quantity = ""
+    },
+    pythonShellOptionsDEV(task) {
+      let app = this
+      console.log(task)
+      return {
+        mode: 'text',
+        pythonPath: 'atol_python/python/python.exe',
+        pythonOptions: ['-u'],
+        scriptPath: 'atol_python',
+        args: [
+          app.currentFiscalPrinter.settings.model, app.currentFiscalPrinter.settings.connection, app.currentFiscalPrinter.settings.comFile, 
+          app.currentFiscalPrinter.settings.baudRate, app.currentFiscalPrinter.settings.IPAddress, app.currentFiscalPrinter.settings.IPPort, task
+        ] 
+      }
+    },
+    pythonShellOptionsPRO(task) {
+      let app = this
+      return {
+        mode: 'text',
+        pythonPath: pythonPath,
+        pythonOptions: ['-u'],
+        scriptPath: pythonScriptPath,
+        args: [
+          app.currentFiscalPrinter.settings.model, app.currentFiscalPrinter.settings.connection, app.currentFiscalPrinter.settings.comFile, 
+          app.currentFiscalPrinter.settings.baudRate, app.currentFiscalPrinter.settings.IPAddress, app.currentFiscalPrinter.settings.IPPort, task
+        ]
+      }
     }
   }
 }

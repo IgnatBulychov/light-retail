@@ -9,19 +9,7 @@ export const createSettingsInBase = function() {
         db.loadDatabase(function (err) { 
             db.insert({
                 oneNote: "constant", // просто заметка для поиска этого поля
-                taxationTypeDefault: null,
-                fiscalPrinter: {
-                    model: '', 
-                    serial: "", 
-                    settings: {
-                        model:"LIBFPTR_MODEL_ATOL_AUTO",
-                        connection:"LIBFPTR_PORT_TCPIP",
-                        comFile:"COM1",
-                        baudRate:"LIBFPTR_PORT_BR_115200",
-                        IPAddress:"192.168.0.13",
-                        IPPort:5555
-                    }                    
-                }
+                taxationTypeDefault: null
             }, function (err, newDoc) { 
                 if (err) {
                     reject(false)

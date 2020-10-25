@@ -22,7 +22,7 @@
 
 <script>
  export default {
-    name: 'add-from-base',
+    name: 'add-item-from-base',
 
     data() {
       return {

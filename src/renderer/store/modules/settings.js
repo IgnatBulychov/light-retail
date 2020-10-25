@@ -1,10 +1,12 @@
 import { getSettingsFromBase } from '../dbAPI/settings/getSettings'
 import { createSettingsInBase } from '../dbAPI/settings/createSettings'
-import { updateSettingsInBase } from '../dbAPI/settings/updateSettings'
+import { saveMainSettingsInBase } from '../dbAPI/settings/saveMainSettings'
 
 const state = {
-  taxationTypeDefault: null,
-  selectedFR: null,
+  mainSettings: {
+    taxationTypeDefault: null
+  },
+  currentFiscalPrinter: null,
   alert: {
     show: false,
     text: ''
@@ -13,14 +15,7 @@ const state = {
 
 const mutations = {
   setSettings (state, settings) {
-    state.taxationTypeDefault = settings.taxationTypeDefault
-    state.selectedFR = selectedFR
-  },
-  setTaxationTypeDefault (state, taxationTypeDefault) {
-    state.taxationTypeDefault = taxationTypeDefault
-  },
-  setSelectedFR (state, selectedFR) {
-    state.selectedFR = selectedFR
+    state.mainSettings.taxationTypeDefault = settings.taxationTypeDefault
   }
 }
 
@@ -39,8 +34,8 @@ const actions = {
       dispatch('getSettings')
     });
   },
-  updateSettings ({ commit, dispatch }, settings) {
-    updateSettingsInBase(settings).then(settings => {
+  saveMainSettings ({ commit, dispatch }, settings) {
+    saveMainSettingsInBase(settings).then(settings => {
       dispatch('getSettings')
     });
   }

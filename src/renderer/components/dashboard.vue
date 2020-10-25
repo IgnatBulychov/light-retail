@@ -49,13 +49,37 @@
           </v-list-item-icon>
           <v-list-item-title>Сменить пользователя</v-list-item-title>
         </v-list-item>
-        <v-list-item color="success" link @click="exit()">
+        <v-list-item color="success" link @click="dialogExitConfirm = true">
           <v-list-item-icon>
             <v-icon>mdi-exit-to-app</v-icon>
           </v-list-item-icon>
           <v-list-item-title>Выход</v-list-item-title>
         </v-list-item>
       </v-list>
+
+      <v-dialog eager 
+        @keydown.esc="dialogExitConfirm = false"
+        max-width="50%"
+        v-model="dialogExitConfirm"  
+        v-on:click:outside="dialogExitConfirm = false" 
+      >
+        <v-card>
+          <v-card-title>
+          </v-card-title>
+          <v-card-text class="text-center">            
+            <span class="text-lg-h6">Вы уверены?</span>
+          </v-card-text>
+          <v-card-actions>
+            <v-btn color="success"  @click="exit(); dialogExitConfirm = false">
+              Да
+            </v-btn>
+            <v-spacer></v-spacer>
+            <v-btn color="secondary" @click="dialogExitConfirm = false">
+              Нет
+            </v-btn>
+          </v-card-actions>
+        </v-card>
+      </v-dialog>
     </v-navigation-drawer>
 
     <v-content  height="100vh" >
@@ -67,13 +91,14 @@
 </template>
 
 <script>
-const { app } = require('electron')
+const remote = require('electron').remote
+const application = remote.app
   export default {
     name: 'dashboard',
     
     data() {
       return {
-        
+        dialogExitConfirm:false
       }
     },
     computed: {
@@ -83,7 +108,7 @@ const { app } = require('electron')
     },
     methods: {
       exit() {
-        app.quit()
+        application.quit()
       }
     
     }
