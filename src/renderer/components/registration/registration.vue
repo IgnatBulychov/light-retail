@@ -99,9 +99,10 @@
       </v-container>
 
       <div v-else class="text-center">
-        <v-icon>mdi-scaner</v-icon> Добавьте позиции в чек
+        <v-icon>mdi-scaner</v-icon> Добавьте позиции в чек 
       </div>
     </div>
+
 
     <div class="footer-bar" >
       <v-toolbar dark color="green lighten-5">    
@@ -411,18 +412,21 @@
       </v-card>
     </v-dialog>
 
+    <scanner-com-port/>
+
     <alert :alert="alert"/>
   </div>
 </template>
 
 <script>
+
 const fs = require("fs");
 const remote = require('electron').remote;
 const application = remote.app;
 import { mdiDataMatrixScan } from '@mdi/js'
 import { mdiDataMatrix } from '@mdi/js'
 import { convertKTN } from './../functions/convertKTN'
-
+import ScannerComPort from './scanner-com-port'
 import { printNoFiscalCheck } from './../functions/printNoFiscalCheck'
 import taxationTypes from './../resources/taxationTypes'
 import checkTypes from './../resources/checkTypes'
@@ -431,7 +435,7 @@ import Alert from '../alerts/alert'
 export default {
   name: 'registration',
   components: {
-    AddItemFromBase, Alert
+    AddItemFromBase, Alert, ScannerComPort
   },
   data() {
     return {
@@ -464,6 +468,7 @@ export default {
   mounted () {
     this.$refs.barcodeInput.focus()   
     this.$store.dispatch('fiscalPrinters/getFiscalPrinters')
+
   },
   watch: {
     '$store.state.check.alert': function () {
@@ -473,7 +478,7 @@ export default {
       this.alert = clone 
     }
   },
-  computed: {    
+  computed: {   
     activeItem() {
       return this.$store.state.check.activeItem
     },  
@@ -519,9 +524,21 @@ export default {
     },
     currentFiscalPrinter() {
       return this.$store.getters['fiscalPrinters/currentFiscalPrinter']
+    },
+    currentScanner() {
+      return this.$store.getters['equipment/currentScanner']
     }
   },
   methods: {
+    /** временный метод */
+    findByBarcode(code) {
+      console.log('УРРРА')
+      app.$store.dispatch('check/getItemByBarcode', code).then(item => {
+            // если поиск вернет маркированный товар           
+            app.toScanDatamatrix()
+            app.currentMarkItem = item
+          })
+    },
     addItem () {
       let app = this
       if (app.inputCode !== "") {

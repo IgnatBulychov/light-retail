@@ -1,6 +1,5 @@
 <template>
     <div height="100%" width="100%" class="mx-2 my-2">
-     
         <v-btn @click="openShift()" class="ma-2" tile color="success" :loading="openShiftLodaing" :disabled="reportXLodaing || closeShiftLodaing">
          <v-icon>mdi-clipboard-arrow-up-outline</v-icon> Открыть смену
         </v-btn>
@@ -12,12 +11,7 @@
         <v-btn @click="closeShift()" class="ma-2" tile color="success" :loading="closeShiftLodaing" :disabled="openShiftLodaing || reportXLodaing">
             <v-icon>mdi-clipboard-arrow-down-outline</v-icon> Закрытие смены (Z-отчет)
         </v-btn> 
-
-
-        
         <alert :alert="alert" />
-
-
   </div>
 </template>
 
@@ -33,7 +27,6 @@ const pythonPath = mainAppPath + '\\atol_python\\python\\python.exe'
 const pythonScriptPath = mainAppPath + '\\atol_python'
 
 let {PythonShell} = require('python-shell')
-
 
 export default {
 name: 'reports',
@@ -68,14 +61,14 @@ methods: {
   openShift() {
     let app = this
     app.openShiftLodaing = true
-    let task = `{
-        "type": "openShift",
-        "operator": {
-            "name": "${app.currentUser.name}",
-            "vatin": "${app.currentUser.vatin}"
-        }
-    }`
-    this.makeJsonTask(task)
+    let task = {}
+    task.type = "openShift"
+    task.operator = {}
+    task.operator.name = app.currentUser.name
+    if (task.operator.vatin) {
+      task.operator.vatin = app.currentUser.vatin
+    }
+    this.makeJsonTask(JSON.stringify(task)) 
     fs.writeFileSync(application.getPath('userData') + "/logs/" + new Date().toLocaleString().replace(/:/g, '-') + "-openShift.log", task)
   },
   reportX() {
@@ -83,29 +76,25 @@ methods: {
     app.reportXLodaing = true
     let task = {}
     task.type = "reportX"
-    
-    /*=`{
-        "type": "reportX",
-        "operator": {
-            "name": "${app.currentUser.name}",
-            "vatin": "${app.currentUser.vatin}"
-        }
-    }`*/
-
+    task.operator = {}
+    task.operator.name = app.currentUser.name
+    if (task.operator.vatin) {
+      task.operator.vatin = app.currentUser.vatin
+    }
     this.makeJsonTask(JSON.stringify(task)) 
     fs.writeFileSync(application.getPath('userData') + "/logs/" + new Date().toLocaleString().replace(/:/g, '-') + "-reportX.log", task)
   },
   closeShift() {
     let app = this
     app.closeShiftLodaing = true
-    let task = `{
-        "type": "closeShift",
-        "operator": {
-            "name": "${app.currentUser.name}",
-            "vatin": "${app.currentUser.vatin}"
-        }
-    }`
-    this.makeJsonTask(task)
+    let task = {}
+    task.type = "closeShift"
+    task.operator = {}
+    task.operator.name = app.currentUser.name
+    if (task.operator.vatin) {
+      task.operator.vatin = app.currentUser.vatin
+    }
+    this.makeJsonTask(JSON.stringify(task)) 
     fs.writeFileSync(application.getPath('userData') + "/logs/" + new Date().toLocaleString().replace(/:/g, '-') + "-closeShift.log", task)
   },
   stopLoading() {

@@ -10,38 +10,14 @@
       <v-tab>
         Кассы
       </v-tab>
+      <v-tab>
+        Оборудование
+      </v-tab>
     </v-tabs>
 
     <v-tabs-items v-model="tab">
       <v-tab-item>
-        <v-container fluid>
-          <v-card>
-            <v-card-title>
-              <v-tooltip bottom>
-              <template v-slot:activator="{ on, attrs }">
-                <v-btn
-                  v-bind="attrs" v-on="on"
-                  color="success"
-                  dark
-                  icon
-                  @click.stop="saveMainSettings()"
-                >
-                  <v-icon>mdi-content-save-outline</v-icon> 
-                </v-btn>
-              </template>
-              <span>Сохранить настройки</span>
-            </v-tooltip>
-              
-            </v-card-title>
-            <v-card-text>
-              <v-select
-                :items="taxationTypes"
-                label="СНО по умолчанию"
-                v-model="taxationTypeDefault"
-              ></v-select> 
-            </v-card-text>
-          </v-card>
-        </v-container>
+        <main-settings/>
       </v-tab-item>
 
       <v-tab-item>
@@ -269,6 +245,10 @@
         </v-card>
       </v-container>
     </v-tab-item>
+
+    <v-tab-item>
+      <equipment />
+    </v-tab-item>
   </v-tabs-items>
     
   <!-- диалог изменения пользователя -->
@@ -330,12 +310,14 @@
 <script>
 import AtolSettings from './kkt-settings/atol-settings'
 import Alert from './alerts/alert.vue'
-import taxationTypes from './resources/taxationTypes.js'
+import MainSettings from './settings/main-settings.vue'
+import Equipment from './settings/equipment/equipment.vue'
+
 
 export default {
   name: 'settings',
   components: {
-    AtolSettings, Alert
+    AtolSettings, Alert, MainSettings, Equipment
   },
   data() {
     return {
@@ -370,13 +352,12 @@ export default {
       nameRules:[
         v => !!v || 'ФИО - обязательное поле'      
       ],     
-      taxationTypes: taxationTypes,
       alert: {
         show: false,
         timeout: 2000,
         type: "success",
         text: ''
-      }
+      },
     }
   },
   computed: {
@@ -396,14 +377,7 @@ export default {
       });
       return list
     },
-    taxationTypeDefault: {
-      get: function() {
-        return this.$store.state.settings.taxationTypeDefault
-      },
-      set: function(v) {
-        this.$store.commit('settings/setTaxationTypeDefault', v)
-      }
-    },  
+     
     vatinRulesUpdateUser() {
       if (this.userForUpdate.vatin) {
         return [
@@ -423,12 +397,14 @@ export default {
       } else {
         return []
       }
-    } 
+    }
   },  
   mounted() {
-    this.$store.dispatch('settings/getSettings')
+    
     this.$store.dispatch('users/getUsers')
     this.$store.dispatch('fiscalPrinters/getFiscalPrinters')    
+    
+    
   },
   methods: {
     removeUser(id) {
@@ -463,18 +439,7 @@ export default {
         this.$refs.formUpdateUser.resetValidation()
       }      
     },
-    saveMainSettings() {
-      let app = this
-      this.$store.dispatch('settings/updateMainSettings', {
-        taxationTypeDefault: app.taxationTypeDefault
-      })
-      this.alert = {
-        show: true,
-        type: "success",
-        timeout: 2000,
-        text: 'Настройки сохранены'
-      }
-    },
+    
     createFiscalPrinter(fiscalPrinter) {
       let app = this
       this.$store.dispatch('fiscalPrinters/createFiscalPrinter', fiscalPrinter)
