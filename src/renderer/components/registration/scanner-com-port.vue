@@ -14,46 +14,42 @@ ioServer.on('connection', function(socket) {
     console.log(socket.id)
     socket.on('SEND_MESSAGE', function(data) {
        ioServer.emit('MESSAGE', data)
-         console.log('!!!',data)
     });
 });
 
-
 const SerialPort = require('serialport')
-//import { getEquipmentFromBase } from '../../store/dbAPI/equipment/getEquipment'
-//this.scanners.find(equipment => equipment.active == true).settings.port
+import { getEquipmentFromBase } from '../../store/dbAPI/equipment/getEquipment'
+let scanners = 
+scanners.find(equipment => equipment.active == true).settings.port
 const port = new SerialPort('COM6', {
   baudRate: 115200
 })
 
-ioClient('localhost:3001').emit('SEND_MESSAGE', 'сообщени');
-
 port.on('data', function(data) {
   let string = ""
   data.forEach(element => {
-    if (String.fromCharCode(element) == '') console.log('oooooooooooo')
+    
     string = string + String.fromCharCode(element)
   });
-  console.log(string)
-  
-import ioClient from 'socket.io-client';
-  ioClient('localhost:3001').emit('SEND_MESSAGE', string);
+  var ioClient = require('socket.io-client')('http://localhost:3001');
+  ioClient.emit('SEND_MESSAGE', string);
 });
 
 
 
+import ioClientVue from 'socket.io-client';
 export default {
     name: 'scanner-com-port',
     data() {
         return {
-            socket : ioClient('localhost:3001')
+            socket : ioClientVue('localhost:3001')
         }
     },
     created() {
-       
+       let app = this
         this.socket.on('MESSAGE', (data) => {
             console.log(data)
-            // you can also do this.messages.push(data)
+            app.$emit('scan', data)
        });
   
     },

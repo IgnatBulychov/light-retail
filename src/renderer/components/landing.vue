@@ -7,7 +7,7 @@
 </template>
 
 <script>
-
+/*
 const SerialPort = require('serialport')
 const port = new SerialPort('COM6', {
   baudRate: 115200
@@ -23,7 +23,7 @@ const port = new SerialPort('COM6', {
    
       console.log(string)
       
-    });
+    });*/
     
   export default {
     name: 'landing',

@@ -412,7 +412,7 @@
       </v-card>
     </v-dialog>
 
-    <scanner-com-port/>
+    <scanner-com-port @scan="findByBarcode"/>
 
     <alert :alert="alert"/>
   </div>
