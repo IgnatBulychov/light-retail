@@ -189,7 +189,7 @@
             label="Принято от клиента"
             v-model="getFromCustomer"
             v-on:keyup.121="toConfirmCashless()"
-            v-on:keyup.enter="printCheck('cash')"
+            v-on:keyup.114="printCheck('cash')"
             :rules="getFromCustomerRules"
           ></v-text-field>        
           <div v-if="(getFromCustomer-summ) > 0">
@@ -214,7 +214,7 @@
                   <v-icon left>
                     mdi-keyboard
                   </v-icon>
-                  Enter
+                  F3
                 </v-chip> 
                 {{  (getFromCustomer-summ) > 0 ? "Наличными" : "Наличными без сдачи"}}             
           </v-btn>
@@ -368,6 +368,38 @@
       </div>
     </v-dialog>
 
+<!-- диалог скан датаматрикс из ком порта -->
+    <v-dialog eager 
+      @keydown.esc="closeDialogScanDatamatrixFromComPort()"
+      max-width="50%"
+      v-model="dialogScanDatamatrixFromComPort"  
+      v-on:click:outside="closeDialogScanDatamatrixFromComPort()" 
+    >
+    <div>
+    <v-card>
+      <v-card-title>
+        <span class="text-lg-h6">
+          Код маркировки
+        </span>
+        <v-spacer></v-spacer>
+          <v-btn icon @click="closeDialogScanDatamatrixFromComPort()">
+            <v-icon>mdi-close</v-icon>
+          </v-btn>
+        </v-card-title>
+        <v-card-text>
+          <v-text-field
+            placeholder="Отсканируйте код маркировки"
+            color="green"
+            :append-icon="mdiDataMatrixScan"
+            :rules="[]"
+          ></v-text-field>        
+        </v-card-text>
+        <v-card-actions>             
+        </v-card-actions>
+      </v-card>
+      </div>
+    </v-dialog>
+
     <!-- диалог настроек чека -->
 
     <v-dialog eager 
@@ -412,22 +444,20 @@
       </v-card>
     </v-dialog>
 
-    <scanner-com-port @scan="findByBarcode"/>
+    <scanner-com-port @scan-data-matrix="scanFromComPortDataMatrix" @scan-ean13="scanFromComPortEan13" />
+
+    <fiscal-printer @checkPrinted="checkWasPrinted" :print="print" :summ="summ" :paymentType="paymentType" :getFromCustomer="getFromCustomer" :checkType="checkType" :items="items" :taxationType="taxationType"/>
 
     <alert :alert="alert"/>
   </div>
 </template>
 
 <script>
-
-const fs = require("fs");
-const remote = require('electron').remote;
-const application = remote.app;
 import { mdiDataMatrixScan } from '@mdi/js'
 import { mdiDataMatrix } from '@mdi/js'
 import { convertKTN } from './../functions/convertKTN'
-import ScannerComPort from './scanner-com-port'
-import { printNoFiscalCheck } from './../functions/printNoFiscalCheck'
+import FiscalPrinter from './../equipment/fiscal-printer'
+import ScannerComPort from './../equipment/scanner-com-port'
 import taxationTypes from './../resources/taxationTypes'
 import checkTypes from './../resources/checkTypes'
 import AddItemFromBase from './add-item-from-base'
@@ -435,7 +465,7 @@ import Alert from '../alerts/alert'
 export default {
   name: 'registration',
   components: {
-    AddItemFromBase, Alert, ScannerComPort
+    AddItemFromBase, Alert, ScannerComPort, FiscalPrinter
   },
   data() {
     return {
@@ -447,6 +477,7 @@ export default {
       dialogItemChanging: false,
       dialogConfirmСashless: false,
       dialogScanDatamatrix: false,
+      dialogScanDatamatrixFromComPort: false,
       dialogCheckSettings: false,
       datamatrixCode: "",
       nomenclatureCode: "",
@@ -454,9 +485,11 @@ export default {
       getFromCustomer: "",
       checkType: 'sell',
       checkTypes,
+      paymentType: '',
       taxationTypes,
       quantity: "",
       quantityOfSelectedItem: "",
+      print: false,
       alert: {
         show: false,
         timeout: 2000,
@@ -467,8 +500,6 @@ export default {
   },
   mounted () {
     this.$refs.barcodeInput.focus()   
-    this.$store.dispatch('fiscalPrinters/getFiscalPrinters')
-
   },
   watch: {
     '$store.state.check.alert': function () {
@@ -497,9 +528,9 @@ export default {
     taxationType() {
       return this.$store.state.check.checkSettings.taxationType
     },
-    currentUser() {
+    /*currentUser() {
       return this.$store.state.users.currentUser
-    },
+    },*/
     quantityRules() {      
       if (isNaN(Number(this.quantity))) {
         return [v => v > 0 || 'Некорректное значение']
@@ -522,22 +553,46 @@ export default {
         }              
       }      
     },
-    currentFiscalPrinter() {
-      return this.$store.getters['fiscalPrinters/currentFiscalPrinter']
-    },
+    /*currentFiscalPrinter() {
+      return this.$store.getters['equipment/currentFiscalPrinter']
+    },*/
     currentScanner() {
       return this.$store.getters['equipment/currentScanner']
     }
   },
   methods: {
     /** временный метод */
-    findByBarcode(code) {
-      console.log('УРРРА')
-      app.$store.dispatch('check/getItemByBarcode', code).then(item => {
-            // если поиск вернет маркированный товар           
-            app.toScanDatamatrix()
+    scanFromComPortEan13(code) {
+        let app = this
+        app.$store.dispatch('check/getItemByBarcode', code).then(item => {
+            // если поиск вернет маркированный товар то срабоате then промиса         
+            
+            app.dialogScanDatamatrixFromComPort = true;
             app.currentMarkItem = item
           })
+
+    },
+    scanFromComPortDataMatrix(code) {
+      let app = this
+      if (this.dialogScanDatamatrixFromComPort) {
+        app.datamatrixCode = code
+        app.addKTN()
+        app.dialogScanDatamatrixFromComPort = false
+        
+      } else  {
+        console.log('дата матрикс сразу')
+        app.datamatrixCode = code
+        let ean13 = Number(code.slice(3, 16))
+        app.$store.dispatch('check/getItemByBarcode', ean13).then(item => {
+          app.currentMarkItem = item
+            // если поиск вернет маркированный товар то срабоате then промиса        
+            app.addKTN()
+          })
+
+       
+
+      }
+      
     },
     addItem () {
       let app = this
@@ -591,6 +646,7 @@ export default {
         app.currentMarkItem.quantity = 1    
         app.currentMarkItem.gtin = result.gtin
         app.currentMarkItem.serial = result.serial
+        app.currentMarkItem.ean13 = result.ean13
         app.currentMarkItem.nomenclatureCode = result.nomenclatureCode
         app.$store.commit('check/addItemToCheck', app.currentMarkItem)      
         app.currentMarkItem = null
@@ -617,132 +673,26 @@ export default {
     changeQuantity(item, changing) {
       this.$store.dispatch('check/changeQuantity', [ item, changing ])      
     },
-    printCheck(way) {
-      let app = this
+    printCheck(paymentType) {
+      console.log("222")
+      this.paymentType = paymentType
+      this.print = true
+       this.dialogConfirmСashless = false       
+       this.dialogPayment = false
 
-      let check = {}
-
-      check.type = app.checkType
-      check.taxationType = app.taxationType
-      check.operator = {
-        name: ""
-      }
-      check.operator.name = app.currentUser.name
-      if (app.currentUser.vatin) {
-        check.operator.vatin = app.currentUser.vatin
-      }  
-
-      check.items = []
-
-      app.items.forEach(item => {
-          check.items.push({
-            type: "position",
-            name: item.title,
-            price: Number(Number(item.price).toFixed(2)),
-            quantity: Number(item.quantity),
-            amount: Number(Number(item.quantity*item.price).toFixed(2)),
-            tax: {
-                type: item.tax
-            },
-            nomenclatureCode: item.nomenclatureCode,
-            //paymentMethod: "fullPrepayment"
-            paymentObject: "commodity"
-          })
-      });
       
-
-      check.payments = []
-
-      if (way == "electronically") {
-
-        check.payments[0] =  {
-           "type": "electronically",
-           "sum": Number(Number(app.summ).toFixed(2))
-        }
-        let nonFiscalCheck = {}
-        nonFiscalCheck.type = "nonFiscal"
-        nonFiscalCheck.items = []
-        
-        nonFiscalCheck.items.push({
-            type: "text",
-            text: "ООО Рога и Копыты",
-            alignment: "center"
-        })
-        check.items.forEach(element => {
-          nonFiscalCheck.items.push({
-            type: "text",
-            text: '---------------------------',
-            alignment: "center"
-          })
-          nonFiscalCheck.items.push({
-            type: "text",
-            text: element.name,
-          })
-          nonFiscalCheck.items.push({
-            type: "text",
-            text: element.price.toFixed(2) + " x " + element.quantity,
-          })
-          nonFiscalCheck.items.push({
-            type: "text",
-            text: " = " + Number(element.quantity*element.price).toFixed(2),
-            alignment: "right"
-          })          
-        });
-        nonFiscalCheck.items.push({
-            type: "text",
-            text: '---------------------------',
-            alignment: "center"
-        })
-        nonFiscalCheck.items.push({
-            type: "text",
-            text: 'Итого:   '+ Number(app.summ).toFixed(2)
-        })
-        nonFiscalCheck.items.push({
-            type: "text",
-            text: 'Ждем вас снова!',
-            alignment: "center"
-        })
-        
-        printNoFiscalCheck(app.pythonShellOptionsDEV(JSON.stringify(nonFiscalCheck))).then(result => {
-          app.alert = result
-        })
-        //fs.appendFile(application.getPath('userData') + "/logs/checks.txt", new Date().toLocaleString().replace(/:/g, '-') + " JSON: " + JSON.stringify(check), function (err) {})
-      } else if (way == "cash"){
-        if (isNaN(Number(app.getFromCustomer))) {
-           
-        } else {
-          if (app.getFromCustomer == "") {
-            
-            check.payments[0] =  {
-              "type": "cash",
-              "sum":  Number(Number(app.summ).toFixed(2))
-            }
-
-            check = {}
-            check.type = "reportX"
-        
-
-             printNoFiscalCheck(app.pythonShellOptionsDEV(JSON.stringify(check))).then(result => {
-              app.alert = result
-            })
-           // fs.appendFile(application.getPath('userData') + "/logs/checks.txt", new Date().toLocaleString().replace(/:/g, '-') + " JSON: " + JSON.stringify(check), function (err) {})            
-          } else if (Number(app.getFromCustomer) >= Number(app.summ)) {
-            console.log('yes')
-            check.payments[0] =  {
-              "type": "cash",
-              "sum":  Number(Number(app.getFromCustomer).toFixed(2))
-            }
-             check = {}
-            check.type = "reportX"
-        
-             printNoFiscalCheck(app.pythonShellOptionsDEV(check)).then(result => {
-              app.alert = result
-            })
-           // fs.appendFile(application.getPath('userData') + "/logs/checks.txt", new Date().toLocaleString().replace(/:/g, '-') + " JSON: " + JSON.stringify(check), function (err) {})         
-          }             
-        }  
+    },
+    checkWasPrinted(result) {
+      this.alert = result
+      if (result.type == "success") {
+        this.print = false
+        this.barcodeInputFocus()
+        this.clearCheck()
+      } else {
+        this.print = false
+        this.barcodeInputFocus()
       }
-      
+        
     },
     barcodeInputFocus() {
       let app = this
@@ -809,6 +759,12 @@ export default {
       let app = this
       setTimeout(function() { app.$refs.barcodeInput.focus() }, 1)
     },
+    closeDialogScanDatamatrixFromComPort() {
+      this.dialogScanDatamatrixFromComPort = false
+      //не грамотно работает, нужно поймать уничтоение компонента
+      let app = this
+      setTimeout(function() { app.$refs.barcodeInput.focus() }, 1)
+    },
     closeDialogConfirmСashless() {
       this.dialogConfirmСashless = false
       //не грамотно работает, нужно поймать уничтоение компонента
@@ -823,7 +779,7 @@ export default {
       setTimeout(function() { app.$refs.barcodeInput.focus() }, 1)
       this.quantity = ""
     },
-    pythonShellOptionsDEV(task) {
+    /*pythonShellOptionsDEV(task) {
       let app = this
       console.log(task)
       return {
@@ -849,7 +805,7 @@ export default {
           app.currentFiscalPrinter.settings.baudRate, app.currentFiscalPrinter.settings.IPAddress, app.currentFiscalPrinter.settings.IPPort, task
         ]
       }
-    }
+    }*/
   }
 }
 </script>

@@ -123,16 +123,17 @@
 <script>
 
 import ScannerSettings from './scanners/scanner-settings.vue'
+import AtolSettings from './fiscalPrinters/atol-settings.vue'
+
 export default {
   name: 'equipment',
   components: {
-    ScannerSettings
+    ScannerSettings, AtolSettings
   },
   data() {
       return {
         ports: [],
         port: "COM1",
-        tab: null,
         valid: true,
         dialogSelectFiscalPrinterModel: false,
         dialogAtolSettings: false,
@@ -173,7 +174,17 @@ export default {
     removeEquipmentItem(id){
       this.$store.dispatch('equipment/removeEquipmentItem', id)
     },
-
+    createFiscalPrinter(fiscalPrinter) {
+      let app = this
+      this.$store.dispatch('equipment/createEquipmentItem', fiscalPrinter)
+      app.dialogAtolSettings = false
+      this.alert = {
+        show: true,
+        type: "success",
+        timeout: 2000,
+        text: 'Настройки сохранены'
+      }
+    },
     createScanner(scanner) {
       let app = this
       this.$store.dispatch('equipment/createEquipmentItem', scanner)

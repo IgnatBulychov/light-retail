@@ -1,7 +1,7 @@
 
 let {PythonShell} = require('python-shell')
 
-export const printNoFiscalCheck = async function (options) {
+export const printFiscalCheck = async function (options) {
     let promise = new Promise((resolve, reject) => {
 
       console.log(options)

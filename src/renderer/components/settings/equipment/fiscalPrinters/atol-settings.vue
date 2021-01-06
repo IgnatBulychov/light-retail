@@ -117,6 +117,7 @@ export default {
           IPPort: 5555,            
         },
         serial: 0,
+        type: 'Фискальный регистратор',
       },      
       error: '',
       success: '',

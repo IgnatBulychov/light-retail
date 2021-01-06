@@ -8,9 +8,6 @@
         Пользователи
       </v-tab>      
       <v-tab>
-        Кассы
-      </v-tab>
-      <v-tab>
         Оборудование
       </v-tab>
     </v-tabs>
@@ -150,7 +147,7 @@
     </v-tab-item>
 
     <!-- разед настройки касс -->
-    <v-tab-item>
+  <!--  <v-tab-item>
       <v-container fluid>
         <v-card>
           <v-card-text>
@@ -246,6 +243,8 @@
       </v-container>
     </v-tab-item>
 
+    -->
+
     <v-tab-item>
       <equipment />
     </v-tab-item>
@@ -308,7 +307,6 @@
 </template>
 
 <script>
-import AtolSettings from './kkt-settings/atol-settings'
 import Alert from './alerts/alert.vue'
 import MainSettings from './settings/main-settings.vue'
 import Equipment from './settings/equipment/equipment.vue'
@@ -317,7 +315,7 @@ import Equipment from './settings/equipment/equipment.vue'
 export default {
   name: 'settings',
   components: {
-    AtolSettings, Alert, MainSettings, Equipment
+    Alert, MainSettings, Equipment
   },
   data() {
     return {
@@ -402,7 +400,7 @@ export default {
   mounted() {
     
     this.$store.dispatch('users/getUsers')
-    this.$store.dispatch('fiscalPrinters/getFiscalPrinters')    
+   // this.$store.dispatch('fiscalPrinters/getFiscalPrinters')    
     
     
   },
@@ -451,12 +449,12 @@ export default {
         text: 'Настройки сохранены'
       }
     },
-    updateFiscalPrinter(fiscalPrinter) {
+   /* updateFiscalPrinter(fiscalPrinter) {
       this.$store.dispatch('fiscalPrinters/updateFiscalPrinter', fiscalPrinter)
     },
     removeFiscalPrinter(id) {
       this.$store.dispatch('fiscalPrinters/removeFiscalPrinter', id)
-    },
+    },*/
   }
 }
 </script>

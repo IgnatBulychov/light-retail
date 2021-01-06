@@ -2,7 +2,7 @@ const remote = require('electron').remote
 const application = remote.app
 
 var Datastore = require('nedb')
-var db = new Datastore({ filename: `${application.getPath('userData')}/settings.db`})
+var db = new Datastore({ filename: `${application.getPath('userData')}/base/settings.db`})
 
 export const getSettingsFromBase = function() {  
   return new Promise(function(resolve, reject){

@@ -22,6 +22,16 @@ const getters = {
       }
     });
     return scanners.find(equipment => equipment.active == true)
+  },
+  currentFiscalPrinter (state) { 
+    let fiscalPrinters = []   
+    state.equipment.forEach(element => {
+      
+      if (element.type == 'Фискальный регистратор') {
+        fiscalPrinters.push(element)
+      }
+    });
+    return fiscalPrinters.find(equipment => equipment.active == true)
   }
 }
 

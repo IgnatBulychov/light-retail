@@ -51,7 +51,7 @@ this.taxationTypeDefaultTemp = this.taxationTypeDefault
   },
   computed: {
     taxationTypeDefault() {
-      return this.$store.state.settings.taxationTypeDefault
+      return this.$store.state.settings.mainSettings.taxationTypeDefault
     }
   },
   methods: {

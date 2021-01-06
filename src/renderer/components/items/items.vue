@@ -334,6 +334,9 @@
     </v-card>
     
     <alert :alert="alert" :timeout="5000"/>
+
+     <scanner-com-port @scan-data-matrix="scanFromComPortDataMatrix" @scan-ean13="scanFromComPortEan13" />
+
   </div>  
 </template>
 
@@ -342,12 +345,13 @@ import { findFolderParent } from '../../store/dbAPI/items/findFolderParent'
 import taxationTypes from '../resources/taxationTypes.js'
 import measureNames from '../resources/measureNames.js'
 import taxes from '../resources/taxes.js'
+import ScannerComPort from './../equipment/scanner-com-port'
 
 import Alert from '../alerts/alert'
     export default {
     name: 'items',  
     components: {
-      Alert
+      Alert, ScannerComPort
     },
     data() {
       return {
@@ -438,7 +442,22 @@ import Alert from '../alerts/alert'
       addBarcodeToItemForUpdate() {
         this.itemForUpdate.barcodes.push(Number(this.barcodeForItemForUpdate))
         this.barcodeForItemForUpdate = ''
-      },      
+      }, 
+      scanFromComPortDataMatrix(code) {
+        let ean13 = Number(code.slice(3, 16))
+        if (this.dialogCreateItem) {
+          this.item.barcodes.push(ean13)
+        } else if (this.dialogUpdateItem) {
+          this.itemForUpdate.barcodes.push(ean13)
+        }
+      },
+      scanFromComPortEan13(code) {
+        if (this.dialogCreateItem) {
+          this.item.barcodes.push(code)
+        } else if (this.dialogUpdateItem) {
+          this.itemForUpdate.barcodes.push(code)
+        }
+      },    
       createItem() {
         this.item.parent = this.$route.query.folder
         this.$store.dispatch('items/createItem', this.item)

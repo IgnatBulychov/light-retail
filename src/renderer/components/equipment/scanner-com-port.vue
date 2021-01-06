@@ -19,21 +19,38 @@ ioServer.on('connection', function(socket) {
 
 const SerialPort = require('serialport')
 import { getEquipmentFromBase } from '../../store/dbAPI/equipment/getEquipment'
-let scanners = 
-scanners.find(equipment => equipment.active == true).settings.port
-const port = new SerialPort('COM6', {
-  baudRate: 115200
-})
 
-port.on('data', function(data) {
-  let string = ""
-  data.forEach(element => {
-    
-    string = string + String.fromCharCode(element)
-  });
-  var ioClient = require('socket.io-client')('http://localhost:3001');
-  ioClient.emit('SEND_MESSAGE', string);
-});
+getEquipmentFromBase().then(result => {
+
+
+let scanners = []   
+    result.forEach(element => {
+      
+      if (element.type == 'Сканер') {
+        scanners.push(element)
+      }
+    });
+    let scanner = scanners.find(equipment => equipment.active == true).settings.port
+
+
+    console.log(scanner)
+    const port = new SerialPort(scanner, {
+      baudRate: 115200
+    })
+
+    port.on('data', function(data) {
+      let string = ""
+      data.forEach(element => {
+        
+        string = string + String.fromCharCode(element)
+      });
+      var ioClient = require('socket.io-client')('http://localhost:3001');
+      ioClient.emit('SEND_MESSAGE', string);
+    });
+})
+   
+ 
+
 
 
 
@@ -49,7 +66,12 @@ export default {
        let app = this
         this.socket.on('MESSAGE', (data) => {
             console.log(data)
-            app.$emit('scan', data)
+            if (data.length == 13) {
+               app.$emit('scan-ean13', data)
+            } else if (data.length > 13) {
+              app.$emit('scan-data-matrix', data)
+            }
+           
        });
   
     },

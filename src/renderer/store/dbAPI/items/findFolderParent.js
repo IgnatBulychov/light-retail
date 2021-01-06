@@ -2,7 +2,7 @@ const remote = require('electron').remote
 const application = remote.app
 
 var Datastore = require('nedb')
-var db = new Datastore({ filename: `${application.getPath('userData')}/folders.db`})
+var db = new Datastore({ filename: `${application.getPath('userData')}/base/folders.db`})
 
 export const findFolderParent = function(folder) {
   return new Promise(function(resolve, reject){  

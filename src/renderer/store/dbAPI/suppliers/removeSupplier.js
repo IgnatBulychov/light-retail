@@ -2,7 +2,7 @@ const remote = require('electron').remote
 const application = remote.app
 
 var Datastore = require('nedb')
-var db = new Datastore({ filename: `${application.getPath('userData')}/suppliers.db`})
+var db = new Datastore({ filename: `${application.getPath('userData')}/base/suppliers.db`})
 
 export const removeSupplierFromBase = function(id) {
     return new Promise(function(resolve, reject){

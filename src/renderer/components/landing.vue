@@ -2,14 +2,13 @@
 <div>
   LiteRetail <br>
   Версия : {{version}} 
-  <v-btn @click="getList">oooooo</v-btn>
 </div>
 </template>
 
 <script>
-/*
+
 const SerialPort = require('serialport')
-const port = new SerialPort('COM6', {
+const port = new SerialPort('COM5', {
   baudRate: 115200
 })
 
@@ -23,7 +22,7 @@ const port = new SerialPort('COM6', {
    
       console.log(string)
       
-    });*/
+    });
     
   export default {
     name: 'landing',

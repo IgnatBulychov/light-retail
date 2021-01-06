@@ -127,7 +127,7 @@ const actions = {
           } else {
             // если товара нет в чеке назначаем ему количество равное одному
             item.quantity = 1;
-            // и добавляем в state, в чек            
+            // и добавляем в чек            
             commit('addItemToCheck', item)
           } 
         });
