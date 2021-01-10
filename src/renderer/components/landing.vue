@@ -6,7 +6,7 @@
 </template>
 
 <script>
-
+/*
 const SerialPort = require('serialport')
 const port = new SerialPort('COM5', {
   baudRate: 115200
@@ -50,7 +50,7 @@ const port = new SerialPort('COM5', {
       } 
     
     
-  }
+  }*/
 </script>
 
 <style>

@@ -11,8 +11,9 @@ const server = app.listen(3001, function() {
 const ioServer = require('socket.io')(server);
 
 ioServer.on('connection', function(socket) {
-    console.log(socket.id)
+
     socket.on('SEND_MESSAGE', function(data) {
+          console.log(data)
        ioServer.emit('MESSAGE', data)
     });
 });
@@ -33,7 +34,7 @@ let scanners = []
     let scanner = scanners.find(equipment => equipment.active == true).settings.port
 
 
-    console.log(scanner)
+    console.log("ну он", scanner)
     const port = new SerialPort(scanner, {
       baudRate: 115200
     })
@@ -41,31 +42,30 @@ let scanners = []
     port.on('data', function(data) {
       let string = ""
       data.forEach(element => {
-        
+        console.log("ну оно", element)
         string = string + String.fromCharCode(element)
+        console.log("ну строка", string)
       });
       var ioClient = require('socket.io-client')('http://localhost:3001');
+      console.log("ну строка опять", string)
       ioClient.emit('SEND_MESSAGE', string);
     });
 })
    
- 
-
-
-
 
 import ioClientVue from 'socket.io-client';
 export default {
     name: 'scanner-com-port',
     data() {
         return {
-            socket : ioClientVue('localhost:3001')
+            socket : ioClientVue('http://localhost:3001')
         }
     },
     created() {
        let app = this
         this.socket.on('MESSAGE', (data) => {
             console.log(data)
+             console.log("ну строка ПРИШЛА", data)
             if (data.length == 13) {
                app.$emit('scan-ean13', data)
             } else if (data.length > 13) {

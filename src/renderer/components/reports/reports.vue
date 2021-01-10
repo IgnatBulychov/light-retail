@@ -51,7 +51,7 @@ mounted() {
 },
 computed: {
   currentFiscalPrinter() {
-    return this.$store.getters['fiscalPrinters/currentFiscalPrinter']
+    return this.$store.getters['equipment/currentFiscalPrinter']
   },
   currentUser() {
     return this.$store.state.users.currentUser

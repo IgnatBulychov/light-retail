@@ -563,6 +563,7 @@ export default {
   methods: {
     /** временный метод */
     scanFromComPortEan13(code) {
+      console.log('eeee', code)
         let app = this
         app.$store.dispatch('check/getItemByBarcode', code).then(item => {
             // если поиск вернет маркированный товар то срабоате then промиса         
@@ -573,6 +574,8 @@ export default {
 
     },
     scanFromComPortDataMatrix(code) {
+      
+      console.log('eeee', code)
       let app = this
       if (this.dialogScanDatamatrixFromComPort) {
         app.datamatrixCode = code

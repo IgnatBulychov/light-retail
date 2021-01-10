@@ -63,11 +63,7 @@
           <v-text-field
               v-model="item.price"
               label="Цена"
-          ></v-text-field>                  
-          <v-text-field
-              v-model="item.costPrice"
-              label="Цена со скидкой"
-          ></v-text-field>
+          ></v-text-field>     
           <form @submit.prevent="addBarcode()">
             <v-text-field
                 v-model="barcode"
@@ -125,11 +121,7 @@
           <v-text-field
               v-model="itemForUpdate.price"
               label="Цена"
-          ></v-text-field>                  
-          <v-text-field
-              v-model="itemForUpdate.costPrice"
-              label="Цена со скидкой"
-          ></v-text-field>
+          ></v-text-field>   
           <form @submit.prevent="addBarcodeToItemForUpdate()">
             <v-text-field
                 v-model="barcodeForItemForUpdate"
@@ -444,18 +436,22 @@ import Alert from '../alerts/alert'
         this.barcodeForItemForUpdate = ''
       }, 
       scanFromComPortDataMatrix(code) {
+        console.log('доб', code )
         let ean13 = Number(code.slice(3, 16))
         if (this.dialogCreateItem) {
           this.item.barcodes.push(ean13)
-        } else if (this.dialogUpdateItem) {
+        } 
+        if (this.dialogUpdateItem) {
           this.itemForUpdate.barcodes.push(ean13)
         }
       },
       scanFromComPortEan13(code) {
+        console.log('доб', code )
         if (this.dialogCreateItem) {
-          this.item.barcodes.push(code)
-        } else if (this.dialogUpdateItem) {
-          this.itemForUpdate.barcodes.push(code)
+          this.item.barcodes.push(Number(code))
+        } 
+        if (this.dialogUpdateItem) {
+          this.itemForUpdate.barcodes.push(Number(code))
         }
       },    
       createItem() {

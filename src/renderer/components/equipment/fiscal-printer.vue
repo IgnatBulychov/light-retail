@@ -11,7 +11,9 @@ import { printFiscalCheck } from './../functions/printFiscalCheck'
 const fs = require("fs");
 const remote = require('electron').remote;
 const application = remote.app;
-
+const mainAppPath = application.getAppPath().replace('\\app.asar', '') 
+const pythonPath = mainAppPath + '\\atol_python\\python\\python.exe'
+const pythonScriptPath = mainAppPath + '\\atol_python'
 export default {
     name: 'fiscal-printer',
     props: [ 'print', 'summ', 'getFromCustomer', 'checkType', 'items', 'taxationType', 'paymentType'],
