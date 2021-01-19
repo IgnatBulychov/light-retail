@@ -14,6 +14,7 @@ export const updateItemInBase = function(item) {
             barcodes: item.barcodes,
             mark: item.mark,
             measureName: item.measureName,
+            measureType: item.measureType,
             tax: item.tax,
           } }, { multi: true }, function (err, numReplaced) {
           if (err) {

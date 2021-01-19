@@ -82,11 +82,11 @@
       </v-dialog>
     </v-navigation-drawer>
 
-    <v-content  height="100vh" >
+    <v-main  height="100vh" >
       <v-container class="main-container" fluid>
         <router-view></router-view>
       </v-container>
-    </v-content> 
+    </v-main> 
   </v-app>
 </template>
 

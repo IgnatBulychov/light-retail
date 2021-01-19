@@ -41,14 +41,16 @@ let scanners = []
 
     port.on('data', function(data) {
       let string = ""
-      data.forEach(element => {
-        console.log("ну оно", element)
-        string = string + String.fromCharCode(element)
-        console.log("ну строка", string)
-      });
-      var ioClient = require('socket.io-client')('http://localhost:3001');
-      console.log("ну строка опять", string)
-      ioClient.emit('SEND_MESSAGE', string);
+     
+      for (let index = 0; index < data.length; index++) {
+        string = string + String.fromCharCode(data[index])
+        if (index == data.length - 1) {
+          var ioClient = require('socket.io-client')('http://localhost:3001');
+          console.log("ну строка опять", string)
+          ioClient.emit('SEND_MESSAGE', string);
+        }
+      }
+      
     });
 })
    
@@ -66,9 +68,9 @@ export default {
         this.socket.on('MESSAGE', (data) => {
             console.log(data)
              console.log("ну строка ПРИШЛА", data)
-            if (data.length == 13) {
+            if (data.length < 15) {
                app.$emit('scan-ean13', data)
-            } else if (data.length > 13) {
+            } else if (data.length > 14) {
               app.$emit('scan-data-matrix', data)
             }
            

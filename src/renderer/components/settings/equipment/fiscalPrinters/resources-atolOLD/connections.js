@@ -1,18 +1,18 @@
 export default [
                     { 
-                        value: 0,
+                        value: 'LIBFPTR_PORT_COM',
                         text: 'COM'
                     },
                     { 
-                        value: 1,
+                        value: 'LIBFPTR_PORT_USB',
                         text: 'USB'
                     },
                     { 
-                        value: 2,
+                        value: 'LIBFPTR_PORT_TCPIP',
                         text: 'TCPIP'
                     },
                     { 
-                        value: 3,
+                        value: 'LIBFPTR_PORT_BLUETOOTH',
                         text: 'BLUETOOTH'
                     },
                 ]

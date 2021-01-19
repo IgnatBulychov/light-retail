@@ -104,6 +104,8 @@ methods: {
   },
   makeJsonTask(task) {
     let app = this    
+    console.log(pythonScriptPath)
+    console.log(pythonPath)
     let options = app.pythonShellOptionsPRO(task)
     console.log(options)
     PythonShell.run('json_task.py', options, function (err, results) {

@@ -6,6 +6,7 @@
 </template>
 
 <script>
+
 /*
 const SerialPort = require('serialport')
 const port = new SerialPort('COM5', {
@@ -23,7 +24,7 @@ const port = new SerialPort('COM5', {
       console.log(string)
       
     });
-    
+    */
   export default {
     name: 'landing',
     
@@ -33,7 +34,7 @@ const port = new SerialPort('COM5', {
       }
     },
     methods: {
-      getList() {
+     /* getList() {
         SerialPort.list().then(
          
   ports => {
@@ -46,11 +47,11 @@ const port = new SerialPort('COM5', {
     console.error(err)
     }
 )
-      }
+      }*/
       } 
     
     
-  }*/
+  }
 </script>
 
 <style>

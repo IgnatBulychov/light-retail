@@ -7,7 +7,6 @@
           append-icon="mdi-barcode-scan"
           @click:append="addItem()"
           color="green"
-          label="Regular"
           placeholder="Отсканируйте или введите код" 
           solo
           v-model="inputCode"
@@ -51,7 +50,19 @@
             <span v-bind:class="activeItem == key ? 'font-weight-bold' : ''">  {{ Number(item.price).toFixed(2) }} ₽  </span>             
           </v-col>
           <v-col cols="3"> 
-            <div v-if="!item.mark">    
+            <div v-if="item.mark">  
+              <v-tooltip top>
+                <template v-slot:activator="{ on, attrs }">
+                  <span v-bind="attrs" v-on="on" v-bind:class="activeItem == key ? 'font-weight-bold' : ''"> 
+                    <v-icon>{{mdiDataMatrix}}</v-icon>
+                  </span>
+                </template>
+                <span>GTIN: {{ item.gtin }}</span> <br>
+                <span>S/N: {{ item.serial }}</span> <br>
+                <span>КТН: {{ item.nomenclatureCode }}</span>
+              </v-tooltip>             
+            </div>
+            <div v-else-if="item.measureType == 'integer'" class="text-center">
               <v-btn
                 icon
                 @click="changeQuantity(key, 0)"
@@ -66,17 +77,8 @@
                 <v-icon :class="activeItem == key ? 'green--text' : 'gray--text'" >mdi-plus</v-icon>
               </v-btn>
             </div>
-            <div v-else class="text-center">
-              <v-tooltip top>
-                <template v-slot:activator="{ on, attrs }">
-                  <span v-bind="attrs" v-on="on" v-bind:class="activeItem == key ? 'font-weight-bold' : ''"> 
-                    <v-icon>{{mdiDataMatrix}}</v-icon>
-                  </span>
-                </template>
-                <span>GTIN: {{ item.gtin }}</span> <br>
-                <span>S/N: {{ item.serial }}</span> <br>
-                <span>КТН: {{ item.nomenclatureCode }}</span>
-              </v-tooltip>
+            <div v-else class="text-center">                 
+                <span v-bind:class="activeItem == key ? 'font-weight-bold' : ''">  {{ Number(item.quantity).toFixed(3) }} {{ item.measureName }}</span>   
             </div>
           </v-col>
 
@@ -528,9 +530,6 @@ export default {
     taxationType() {
       return this.$store.state.check.checkSettings.taxationType
     },
-    /*currentUser() {
-      return this.$store.state.users.currentUser
-    },*/
     quantityRules() {      
       if (isNaN(Number(this.quantity))) {
         return [v => v > 0 || 'Некорректное значение']
@@ -553,15 +552,11 @@ export default {
         }              
       }      
     },
-    /*currentFiscalPrinter() {
-      return this.$store.getters['equipment/currentFiscalPrinter']
-    },*/
     currentScanner() {
       return this.$store.getters['equipment/currentScanner']
     }
   },
   methods: {
-    /** временный метод */
     scanFromComPortEan13(code) {
       console.log('eeee', code)
         let app = this
@@ -781,34 +776,7 @@ export default {
       let app = this
       setTimeout(function() { app.$refs.barcodeInput.focus() }, 1)
       this.quantity = ""
-    },
-    /*pythonShellOptionsDEV(task) {
-      let app = this
-      console.log(task)
-      return {
-        mode: 'text',
-        pythonPath: 'atol_python/python/python.exe',
-        pythonOptions: ['-u'],
-        scriptPath: 'atol_python',
-        args: [
-          app.currentFiscalPrinter.settings.model, app.currentFiscalPrinter.settings.connection, app.currentFiscalPrinter.settings.comFile, 
-          app.currentFiscalPrinter.settings.baudRate, app.currentFiscalPrinter.settings.IPAddress, app.currentFiscalPrinter.settings.IPPort, task
-        ] 
-      }
-    },
-    pythonShellOptionsPRO(task) {
-      let app = this
-      return {
-        mode: 'text',
-        pythonPath: pythonPath,
-        pythonOptions: ['-u'],
-        scriptPath: pythonScriptPath,
-        args: [
-          app.currentFiscalPrinter.settings.model, app.currentFiscalPrinter.settings.connection, app.currentFiscalPrinter.settings.comFile, 
-          app.currentFiscalPrinter.settings.baudRate, app.currentFiscalPrinter.settings.IPAddress, app.currentFiscalPrinter.settings.IPPort, task
-        ]
-      }
-    }*/
+    }
   }
 }
 </script>

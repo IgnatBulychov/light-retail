@@ -99,6 +99,7 @@
             label="Единица измерения"
             v-model="item.measureName"
           ></v-select>
+          
           <v-select
             :items="taxes"
             label="Налоговая ставка"
@@ -363,6 +364,7 @@ import Alert from '../alerts/alert'
               barcodes:[],
               mark: false,
               measureName: 'шт',
+              measureType: "integer",
               tax: 'none',
               parent: "root"
           },
@@ -374,6 +376,7 @@ import Alert from '../alerts/alert'
               quantity: 0,
               mark: false,
               measureName: 'шт',
+              measureType: "integer",
               tax: 'none',
               parent: "root"
           },
@@ -456,6 +459,11 @@ import Alert from '../alerts/alert'
       },    
       createItem() {
         this.item.parent = this.$route.query.folder
+        if (this.item.measureName == 'шт' || this.item.measureName == 'компл' || this.item.measureName == 'упак' || this.item.measureName == 'ед' || this.item.measureName == 'пар' || this.item.measureName == 'пач') {
+          this.item.measureType = "integer"
+        } else {
+          this.item.measureType = "float"
+        }       
         this.$store.dispatch('items/createItem', this.item)
         // сброс формы товара      
         this.dialogCreateItem = false
@@ -467,12 +475,18 @@ import Alert from '../alerts/alert'
               barcodes:[],
               mark: false,
               measureName: 'шт',
+              measureType: "integer",
               tax: 'none',
               parent: "root"
           }
       },
       updateItem() {
         console.log(this.itemForUpdate)
+        if (this.itemForUpdate.measureName == 'шт' || this.itemForUpdate.measureName == 'компл' || this.itemForUpdate.measureName == 'упак' || this.itemForUpdate.measureName == 'ед' || this.itemForUpdate.measureName == 'пар' || this.itemForUpdate.measureName == 'пач') {
+          this.itemForUpdate.measureType = "integer"
+        } else {
+          this.itemForUpdate.measureType = "float"
+        }
         this.$store.dispatch('items/updateItem', this.itemForUpdate)
         this.dialogUpdateItem = false
       },
