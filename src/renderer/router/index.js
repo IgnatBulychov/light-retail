@@ -44,6 +44,16 @@ export default new Router({
                     path: 'items',
                     name: 'items',
                     component: require('@/components/items/items').default
+                  },
+                  {
+                    path: 'customers',
+                    name: 'customers',
+                    component: require('@/components/customers/customers').default
+                  },
+                  {
+                    path: 'suppliers',
+                    name: 'suppliers',
+                    component: require('@/components/suppliers/suppliers').default
                   }
                  
                 ]

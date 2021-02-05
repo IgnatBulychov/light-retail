@@ -1,0 +1,145 @@
+<template>
+  <v-card>
+        <v-card-title>
+           Редактирование
+          <v-spacer/>
+          <v-switch
+            v-model="fineTuning"
+            label="Тонкая настройка"
+          ></v-switch>
+        </v-card-title>
+        <v-card-text>
+          <v-text-field
+              v-model="itemForUpdate.title"
+              label="Наименование"
+          ></v-text-field>
+            <v-text-field
+              v-model="itemForUpdate.vendorCode"
+              label="Артикул"
+          ></v-text-field> 
+          <v-text-field
+              v-model="itemForUpdate.price"
+              label="Цена"
+          ></v-text-field>   
+          <form @submit.prevent="addBarcode()">
+            <v-text-field
+                v-model="barcode"
+                label="Штрихкод"
+            ></v-text-field>
+            <v-tooltip bottom>
+              <template v-slot:activator="{ on, attrs }">
+                <v-btn v-bind="attrs" v-on="on" icon type="submit">  
+                    <v-icon class="warning--text">mdi-plus</v-icon>           
+                  </v-btn>
+              </template>
+              <span>Добавить штрихкод</span>
+            </v-tooltip> 
+            <v-chip
+              v-for="(barcode, key) in itemForUpdate.barcodes" :key="key"
+              class="ma-2"
+              color="secondary"
+              text-color="white"
+            >
+              {{ barcode }}
+              <v-btn  @click="itemForUpdate.barcodes.splice(key, 1)" icon>  
+                <v-icon class="error--text">mdi-close-circle-outline</v-icon>           
+              </v-btn>
+            </v-chip>                    
+          </form>
+          <v-switch
+            v-model="itemForUpdate.mark"
+            color="green"
+            label="Маркированный товар"
+          ></v-switch>
+
+          <v-select
+            :items="fineTuning ? itemTypes : itemTypesMinimal"
+            label="Тип"
+            v-model="itemForUpdate.itemType"
+          ></v-select>
+
+          <v-select
+            v-if="fineTuning"
+            :items="paymentMethods"
+            label="Способ расчета"
+            v-model="itemForUpdate.paymentMethod"
+          ></v-select>
+
+          <v-select
+            :items="measureNames"
+            label="Единица измерения"
+            v-model="itemForUpdate.measureName"
+          ></v-select>
+          
+
+          <v-select
+            :items="taxes"
+            label="Налоговая ставка"
+            v-model="itemForUpdate.tax"
+          ></v-select>
+          <v-btn class="success" @click="updateItem()">Изменить товар</v-btn>
+        </v-card-text>
+
+          <scanner-com-port @scan-data-matrix="scanFromComPortDataMatrix" @scan-ean13="scanFromComPortEan13" />
+
+      </v-card>
+</template>
+
+<script>
+import ScannerComPort from './../equipment/scanner-com-port' 
+import measureNames from '../resources/measureNames.js'
+import taxes from '../resources/taxes.js'
+import itemTypesMinimal from '../resources/itemTypesMinimal.js'
+import itemTypes from '../resources/itemTypes.js'
+import paymentMethods from './../resources/paymentMethods'
+export default {
+    name: 'update-item', 
+    props: ['itemForUpdate'],
+    components: {
+      ScannerComPort
+    },
+    data() {
+      return {
+         fineTuning: false,
+        barcode: "",
+        
+           measureNames,
+         taxes,
+           itemTypes,
+          itemTypesMinimal,
+          paymentMethods
+      }
+    },
+    methods: { 
+      
+      updateItem() {        
+        if (this.itemForUpdate.measureName == 'шт' || this.itemForUpdate.measureName == 'компл' || this.itemForUpdate.measureName == 'упак' || this.itemForUpdate.measureName == 'ед' || this.itemForUpdate.measureName == 'пар' || this.itemForUpdate.measureName == 'пач') {
+          this.itemForUpdate.measureType = "integer"
+        } else {
+          this.itemForUpdate.measureType = "float"
+        }
+        this.$store.dispatch('items/updateItem', this.itemForUpdate)
+        this.$emit('itemWasUpdated')
+      }, 
+      scanFromComPortDataMatrix(code) {
+        console.log('доб', code )
+        let ean13 = Number(code.slice(3, 16))
+        if (this.dialogCreateItem) {
+          this.itemForUpdate.barcodes.push(ean13)
+        } 
+      },
+      scanFromComPortEan13(code) {
+        console.log('доб', code )
+        if (this.dialogCreateItem) {
+          this.itemForUpdate.barcodes.push(Number(code))
+        } 
+      },  
+      addBarcode() {
+        this.itemForUpdate.barcodes.push(Number(this.barcode))
+        this.barcode = ''
+      }, 
+      
+       
+    }
+}
+</script>

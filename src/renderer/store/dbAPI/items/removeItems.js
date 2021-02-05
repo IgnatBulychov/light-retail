@@ -8,7 +8,7 @@ export const removeItemsFromBase = function(items) {
     return new Promise(function(resolve, reject){
         db.loadDatabase(function (err) { 
             items.forEach(function(item, i, arr) {
-                db.remove({ _id: item }, {}, function (err, numRemoved) {
+                db.remove({ _id: item._id }, {}, function (err, numRemoved) {
                     if (err) {
                         reject(err)
                     } 

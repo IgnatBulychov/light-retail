@@ -20,7 +20,7 @@
     </div>
 
     <div class="check-items"  height="80%">
-      <v-container v-if="items.length">
+      <v-container fluid v-if="items.length">
         <v-row class="text-center">
           <v-col cols="3" class="text-left">
             Наименование
@@ -134,7 +134,7 @@
 
           <v-dialog eager
             v-model="dialogAddItemFromBase"
-            max-width="80%"
+            width="90%"
           >
             <add-item-from-base></add-item-from-base>
           </v-dialog>
@@ -301,6 +301,7 @@
             <v-icon>mdi-close</v-icon>
           </v-btn>
         </v-card-title>
+         <v-form @submit.prevent="changeItem()">
         <v-card-text>          
           <v-text-field
             ref="itemQuantity"
@@ -308,20 +309,26 @@
             color="green"
             label="Количество"
             v-model="quantity"
-            v-on:keyup.enter="changeItem()"
             :rules="quantityRules"
-          ></v-text-field>        
+             v-on:keyup.enter="changeItem()"
+          ></v-text-field>   
+           <v-select
+            :items="paymentMethods"
+            label="Способ расчета"
+            v-model="paymentMethodOfSelectedItem"
+          ></v-select>       
         </v-card-text>
         <v-card-actions>    
            <v-spacer></v-spacer>
       
-          <v-btn @click="changeItem()" width="40%" height="50px" dark color="green lighten-2">
+          <v-btn type="submit" width="40%" height="50px" dark color="green lighten-2">
               <v-chip class="ma-2" color="gray" label dark text-color="white">
                 <v-icon> mdi-keyboard </v-icon> Enter
               </v-chip> Ок        
             </v-btn>
              <v-spacer></v-spacer>          
         </v-card-actions>
+        </v-form>
       </v-card>
       </div>
     </v-dialog>
@@ -420,7 +427,9 @@
             <v-icon>mdi-close</v-icon>
           </v-btn>
         </v-card-title>
-        <v-card-text>
+       
+        <v-card-text text-center>
+           <v-form>
           <v-select
             :items="checkTypes"
             label="Тип чека"
@@ -431,9 +440,45 @@
             :items="taxationTypes"
             label="СНО чека"
             v-model="taxationType"
-            disabled
-          ></v-select>     
+            
+          ></v-select>           
 </div>
+  </v-form>
+<div v-if="customer">
+  Покупатель:
+<v-form v-model="validCustomer" lazy-validation>
+        
+        <v-text-field
+          placeholder="Название"
+          v-model="customer.name"
+          :rules="customerNameRules"
+        ></v-text-field> 
+        <v-text-field
+          placeholder="ИНН"
+          v-model="customer.vatin"
+          :rules="customerVatinRules"
+        ></v-text-field>    
+        <v-text-field
+          placeholder="Электронная почта"
+          v-model="customer.email"
+          :rules="customerEmailRules"
+        ></v-text-field>   
+        <v-text-field
+          placeholder="Телефон"
+          v-model="customer.phone"
+          :rules="customerPhoneRules"
+        ></v-text-field>              
+      
+    </v-form>   
+</div>
+
+ <v-btn v-if="!customer" @click="dialogAddCustomer = true" color="green">
+                Добавить реквизиты покупателя       
+            </v-btn>  
+
+             <v-btn v-if="customer" @click="customer = false" color="error">
+                Удалить реквизиты покупателя       
+            </v-btn> 
         </v-card-text>
         <v-card-actions>    
            <v-spacer></v-spacer>
@@ -446,9 +491,31 @@
       </v-card>
     </v-dialog>
 
-    <scanner-com-port @scan-data-matrix="scanFromComPortDataMatrix" @scan-ean13="scanFromComPortEan13" />
+    <v-dialog eager 
+      @keydown.esc="dialogAddCustomer = false"
+      max-width="50%"
+      v-model="dialogAddCustomer"  
+      v-on:click:outside="dialogAddCustomer = false" 
+    >
+      <add-customer @customerWasSelected="addCustomerToForm"/>
+    </v-dialog>
 
-    <fiscal-printer @checkPrinted="checkWasPrinted" :print="print" :summ="summ" :paymentType="paymentType" :getFromCustomer="getFromCustomer" :checkType="checkType" :items="items" :taxationType="taxationType"/>
+    <scanner-com-port 
+      @scan-data-matrix="scanFromComPortDataMatrix" 
+      @scan-ean13="scanFromComPortEan13"
+    />
+
+    <fiscal-printer 
+      @checkPrinted="checkWasPrinted" 
+      :print="print" 
+      :summ="summ" 
+      :paymentType="paymentType" 
+      :getFromCustomer="getFromCustomer" 
+      :checkType="checkType" 
+      :items="items" 
+      :taxationType="taxationType" 
+      :customer="customer"
+    />
 
     <alert :alert="alert"/>
   </div>
@@ -462,12 +529,14 @@ import FiscalPrinter from './../equipment/fiscal-printer'
 import ScannerComPort from './../equipment/scanner-com-port'
 import taxationTypes from './../resources/taxationTypes'
 import checkTypes from './../resources/checkTypes'
+import paymentMethods from './../resources/paymentMethods'
 import AddItemFromBase from './add-item-from-base'
+import AddCustomer from './add-customer'
 import Alert from '../alerts/alert'
 export default {
   name: 'registration',
   components: {
-    AddItemFromBase, Alert, ScannerComPort, FiscalPrinter
+    AddItemFromBase, Alert, ScannerComPort, FiscalPrinter, AddCustomer
   },
   data() {
     return {
@@ -481,17 +550,25 @@ export default {
       dialogScanDatamatrix: false,
       dialogScanDatamatrixFromComPort: false,
       dialogCheckSettings: false,
+      dialogAddCustomer: false,
       datamatrixCode: "",
       nomenclatureCode: "",
       currentMarkItem: null,
       getFromCustomer: "",
       checkType: 'sell',
       checkTypes,
+      paymentMethods,
       paymentType: '',
+      paymentMethodOfSelectedItem: 'fullPayment',
       taxationTypes,
       quantity: "",
       quantityOfSelectedItem: "",
       print: false,
+      customer: false,
+      customerNameRules: [
+        v => !!v || 'Название - обязательное поле'
+      ],
+      validCustomer: true,
       alert: {
         show: false,
         timeout: 2000,
@@ -500,6 +577,11 @@ export default {
       }
     }
   },
+  destroyed() {
+    console.log('registration destroed')
+      fptr.close()
+      fptr.destroy()
+    },
   mounted () {
     this.$refs.barcodeInput.focus()   
   },
@@ -527,8 +609,13 @@ export default {
     items() {
         return this.$store.state.check.items
     },
-    taxationType() {
-      return this.$store.state.check.checkSettings.taxationType
+    taxationType: {
+      get() {
+        return this.$store.state.check.checkSettings.taxationType
+      },
+      set(v) {
+        this.$store.commit('check/setTaxationType', v)
+      }
     },
     quantityRules() {      
       if (isNaN(Number(this.quantity))) {
@@ -551,6 +638,34 @@ export default {
          return [v => v > 0 || 'Некорректное значение']
         }              
       }      
+    },
+    customerEmailRules() {
+      if (!this.customer.phone) {
+        return [
+          v => !!v || 'Заполните телефон или E-mail',
+        ]
+      } else {
+        return []
+      }      
+    },
+    customerPhoneRules () {
+      if (!this.customer.email) {
+        return [
+          v => !!v || 'Заполните телефон или E-mail',
+        ]
+      } else {
+        return []
+      }      
+    },
+    customerVatinRules() {
+      if (this.customer.vatin) {
+        return [
+          v => (v.length == 0 || v.length == 12) || 'Некорректный ИНН',
+          v =>  /^\d+$/.test(v) || 'Некорректный ИНН'       
+        ]
+      } else {
+        return []
+      }
     },
     currentScanner() {
       return this.$store.getters['equipment/currentScanner']
@@ -586,11 +701,7 @@ export default {
             // если поиск вернет маркированный товар то срабоате then промиса        
             app.addKTN()
           })
-
-       
-
       }
-      
     },
     addItem () {
       let app = this
@@ -664,6 +775,9 @@ export default {
     },
     clearCheck() {
       this.$store.commit('check/clearCheck')
+      this.checkType = 'sell'
+      this.taxationType = ''
+      this.customer = {}
     },
     changePosition (to) {
       this.$store.dispatch('check/changePosition', to)
@@ -671,19 +785,24 @@ export default {
     changeQuantity(item, changing) {
       this.$store.dispatch('check/changeQuantity', [ item, changing ])      
     },
+    addCustomerToForm(customer) {
+      let clone = {}
+      this.customer = Object.assign(clone, customer)
+      this.dialogAddCustomer = false
+    },
     printCheck(paymentType) {
       console.log("222")
       this.paymentType = paymentType
       this.print = true
-       this.dialogConfirmСashless = false       
-       this.dialogPayment = false
+      this.dialogConfirmСashless = false       
+      this.dialogPayment = false
 
-      
     },
     checkWasPrinted(result) {
       this.alert = result
       if (result.type == "success") {
         this.print = false
+        
         this.barcodeInputFocus()
         this.clearCheck()
       } else {
@@ -727,21 +846,23 @@ export default {
       let app = this 
       if (this.inputCode == "") {
           this.quantityOfSelectedItem = this.items[this.activeItem].quantity
+          this.paymentMethodOfSelectedItem = this.items[this.activeItem].paymentMethod
         //не грамотно работает, нужно поймать уничтоение компонента
         this.dialogItemChanging = true;
         setTimeout(function() { app.$refs.itemQuantity.focus() }, 1)
       }
     },
     changeItem() {
-      if (this.quantity == "") {
-        this.closeDialogItemChanging()   
-      } else if (this.quantity > 0) {
-        this.$store.dispatch('check/setQuantity', [ this.activeItem, this.quantity])
-        this.closeDialogItemChanging()   
+       if (this.quantity > 0) {
+        this.$store.dispatch('check/setQuantity', [ this.activeItem, this.quantity ])
+        
+        
       }   
+      this.$store.commit('check/setPaymentMethod', [ this.activeItem, this.paymentMethodOfSelectedItem ])
+      this.closeDialogItemChanging()   
     },
     saveCheckSettings() {
-
+      this.dialogCheckSettings = false
     },
     closeDialogPayment() {
       this.dialogPayment = false

@@ -31,6 +31,9 @@ const mutations = {
     }
     state.items[item].quantity = quantity
   },
+  setPaymentMethod(state, [ item, paymentMethod ]) {
+    state.items[item].paymentMethod = paymentMethod
+  },
   setCheckType(state, checkType) {
     state.checkSettings.checkType = checkType
   },
@@ -127,6 +130,7 @@ const actions = {
           } else {
             // если товара нет в чеке назначаем ему количество равное одному
             item.quantity = 1;
+            item.paymentMethod = 'fullPayment'
             // и добавляем в чек            
             commit('addItemToCheck', item)
           } 

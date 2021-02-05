@@ -13,22 +13,22 @@
         <v-card-text>
         <v-text-field
           placeholder="Название"
-          v-model="customer.name"
+          v-model="customerForUpdate.name"
           :rules="nameRules"
         ></v-text-field> 
         <v-text-field
           placeholder="ИНН"
-          v-model="customer.vatin"
+          v-model="customerForUpdate.vatin"
           :rules="vatinRules"
         ></v-text-field>    
         <v-text-field
           placeholder="ИНН"
-          v-model="customer.email"
+          v-model="customerForUpdate.email"
           :rules="emailRules"
         ></v-text-field>   
         <v-text-field
           placeholder="ИНН"
-          v-model="customer.phone"
+          v-model="customerForUpdate.phone"
           :rules="phoneRules"
         ></v-text-field>              
       </v-card-text>
@@ -45,6 +45,7 @@
 <script>
 export default {
   name: 'update-customer',
+  props: ['customerForUpdate'],
   data() {
     return {
       valid:true,
@@ -58,13 +59,13 @@ export default {
           value: "entity"
         }
       ],
-      customer: {
+    /* customer: {
         name: "",
         vatin: "",
         phone: "",
         email: "",
         status: 'individual'
-      },      
+      },      */
       nameRules: [
         v => !!v || 'Название - обязательное поле'
       ]

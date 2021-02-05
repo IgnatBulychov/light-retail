@@ -2,44 +2,39 @@
     <v-card>
       <v-card-title>
         <span class="text-lg-h6">
-            Создание нового поставщика
+            Изменение поставщика
         </span>
         <v-spacer></v-spacer>
         <v-btn icon @click="$emit('close-dialog')">
           <v-icon>mdi-close</v-icon>
         </v-btn>
       </v-card-title>
-      <v-form @submit.prevent="createCustomer()" ref="formCreateCustomer" v-model="valid" lazy-validation>
+      <v-form @submit.prevent="updateCustomer()" ref="formUpdateCustomer" v-model="valid" lazy-validation>
         <v-card-text>
         <v-text-field
           placeholder="Название"
           v-model="customer.name"
           :rules="nameRules"
         ></v-text-field> 
-        <v-select
-          :items="statuses"
-          label="Статус"
-          v-model="customer.status"
-        ></v-select>  
         <v-text-field
           placeholder="ИНН"
           v-model="customer.vatin"
           :rules="vatinRules"
         ></v-text-field>    
         <v-text-field
-          placeholder="Электронная почта"
+          placeholder="ИНН"
           v-model="customer.email"
           :rules="emailRules"
         ></v-text-field>   
         <v-text-field
-          placeholder="Телефон"
+          placeholder="ИНН"
           v-model="customer.phone"
           :rules="phoneRules"
         ></v-text-field>              
       </v-card-text>
       <v-card-actions>                    
         <v-btn type="submit" width="40%" height="50px" dark color="green lighten-2">
-            Создать       
+            Изменить       
         </v-btn>
         <v-spacer></v-spacer>          
       </v-card-actions>
@@ -49,7 +44,7 @@
 
 <script>
 export default {
-  name: 'create-customer',
+  name: 'update-supplier',
   data() {
     return {
       valid:true,
@@ -106,9 +101,9 @@ export default {
     } 
   },
   methods: {
-    createCustomer() {
-      if (this.$refs.formCreateCustomer.validate()) {
-        this.$store.dispatch('customers/createCustomer', this.customer)
+    updateUser() {
+      if (this.$refs.formUpdateCustomer.validate()) {
+        this.$store.dispatch('customers/updateCustomer', this.customer)
          this.customer = {
           name: "",
           vatin: "",
@@ -116,7 +111,7 @@ export default {
           email: "",
           status: 'individual'
         }
-        this.$refs.formCreateCustomer.resetValidation()
+        this.$refs.formUpdateCustomer.resetValidation()
         this.$emit('close-dialog')       
       }      
     }

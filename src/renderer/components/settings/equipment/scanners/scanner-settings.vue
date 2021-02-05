@@ -3,8 +3,8 @@
     <v-card-title>
       Добавление нового сканера
     </v-card-title>
-    <v-card-text>
-      <!--
+  <!--  <v-card-text>
+      
       <div v-if="ports.length">
         <v-select
           :items="ports"
@@ -14,31 +14,28 @@
       </div>
       <div v-else>
         Устройства не обнаружены. Проверьте установлен ли драйвер USB-COM для сканера.
-      </div>-->
-    </v-card-text>
-      <v-card-actions>
-         <v-text-field v-model="scanner.settings.port"></v-text-field>
-            <v-tooltip bottom>
-             
-        <template v-slot:activator="{ on, attrs }">
-        <v-btn
-            v-bind="attrs" v-on="on"
-            color="success"
-            dark
-            icon
-            @click.stop="createScanner()"
-        >
-            <v-icon>mdi-content-save-outline</v-icon> 
-        </v-btn>
-        </template>
-        <span>Добавить сканер</span>
-      </v-tooltip>
+      </div>
+    </v-card-text>-->
+      <v-card-text> 
+        <v-select
+          :items="ports"
+          label="COM-порт"
+          v-model="scanner.settings.port"
+        ></v-select> 
+ </v-card-text>
+        <v-card-actions>
+          
+      <v-spacer></v-spacer>     
+      <v-btn color="green darken-5" class="text-center" text  @click.stop="createScanner()">Добавить сканер</v-btn>
     </v-card-actions>
+
+
+          
   </v-card>
 </template>
 
 <script>
-
+import comPorts from '../resources/comPorts.js'
 const SerialPort = require('serialport')
 export default {
     name: 'scanner-settings',
@@ -54,7 +51,7 @@ export default {
                 }
             },
             
-      ports: [],
+      ports: comPorts,
       port: "COM1",
         }
     },

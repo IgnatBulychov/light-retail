@@ -29,7 +29,7 @@ const actions = {
       dispatch('getCustomers')
     });
   },
-  removeUser ({ dispatch }, customer) {
+  removeCustomer ({ dispatch }, customer) {
     removeCustomerFromBase(customer).then(result => {
       dispatch('getCustomers')
     });

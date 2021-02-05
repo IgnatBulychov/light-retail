@@ -108,13 +108,11 @@ export default {
   computed: {
     
   },
-      created() {
-     
-fptr.create();
-this.settings = fptr.getSettings();
-  console.log('getSettings', this.settings);
-
-    },
+  created() {
+    fptr.create();
+    this.settings = fptr.getSettings();
+    console.log('getSettings', this.settings);
+  },
   methods: {
     connectionTest () {  
       let app = this
@@ -127,9 +125,30 @@ this.settings.IPAddress = this.fiscalPrinter.settings.IPAddress;
 this.settings.IPPort = this.fiscalPrinter.settings.IPPort;
 console.log('setSettings', fptr.setSettings(this.settings));
  console.log('getSettings',fptr.getSettings());
-
-  //  console.log('open', fptr.open());
+fptr.open()
    
+   fptr.processJsonAsync({type: 'getDeviceStatus'}, (err, result) => {
+      if (err) {
+         app.alert = {
+            type: 'error',
+            show: true,
+            text: 'Нет связи с ККТ, проверьте настройки',
+            timeout: 3000
+          }
+           fptr.close()   
+        throw err;
+      } else {
+        console.log('getDeviceStatus', result);
+        this.alert = {
+            type: 'success',
+            show: true,
+            text: 'Связь установлена',
+            timeout: 3000
+        } 
+         fptr.close()   
+      }
+    })
+      
 /*
 fptr.processJsonAsync(
     {type: 'reportX', operator: {name: 'Иванов', vatin: '123654789507'}},
@@ -148,23 +167,17 @@ fptr.processJsonAsync(
         })
       }
     });
-*/
+
 
       if (fptr.isOpened()) {
-        if (fptr.open()) {
+        
           this.alert = {
             type: 'success',
             show: true,
             text: 'Связь установлена',
             timeout: 3000
-          }
-        } else {
-           this.alert = {
-            type: 'error',
-            show: true,
-            text: 'Нет связи с ККТ, проверьте настройки',
-            timeout: 3000
-          }
+          
+           
         } 
       } else {
           this.alert = {
@@ -174,7 +187,7 @@ fptr.processJsonAsync(
             timeout: 3000
           }
       }
-       
+       */
   
        
        

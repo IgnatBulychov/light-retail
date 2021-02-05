@@ -2,13 +2,15 @@
 </template>
 <script>
 
+
+
 const fs = require("fs");
 const w = require('node-atol-wrapper');
 const fptr = new w.Fptr10();
 const remote = require('electron').remote;
 const application = remote.app;
 export default {
-    name: 'fiscal-printer',
+    name: 'atol-fiscal-printer',
     props: [ 'print', 'summ', 'getFromCustomer', 'checkType', 'items', 'taxationType', 'paymentType', 'customer'],
     data() {
         return {
@@ -45,19 +47,18 @@ export default {
         let app = this 
         if (this.print) {
           console.log("печать чека")
-          if (currentFiscalPrinter.model = "Атол") {
-            app.printCheckAtol()
-          } else if (currentFiscalPrinter.model = "Меркурий") {
-            app.printCheckMerc()
-          }
-
-          
+          app.printCheck()
         }
       }
     },
     methods: {
-      printCheckAtol() {
-
+      printCheck() {
+ this.alert = {
+              show: false,
+              timeout: 3000,
+              type: "error",
+              text: 'Нет связи с кассой'
+            }
         let app = this
 
         let check = {}
@@ -112,13 +113,13 @@ export default {
 
         }
 
-        check.payments[0] =  {
-              "type": app.paymentType,
-              "sum":  app.paymentType == "electronically" ? Number(Number(app.summ).toFixed(2)) : sum
-        }
+          check.payments[0] =  {
+                "type": app.paymentType,
+                "sum":  app.paymentType == "electronically" ? Number(Number(app.summ).toFixed(2)) : sum
+              }
 
   
-        fs.appendFile(application.getPath('userData') + "/logs/checks.txt", new Date().toLocaleString().replace(/:/g, '-') + " JSON: " + JSON.stringify(check) + "\n \n", function (err) {})            
+         fs.appendFile(application.getPath('userData') + "/logs/checks.txt", new Date().toLocaleString().replace(/:/g, '-') + " JSON: " + JSON.stringify(check) + "\n \n", function (err) {})            
 
         fptr.processJsonAsync(
         check,
@@ -144,9 +145,6 @@ export default {
         });
 
         }
-    },
-    printCheckMerc() {
-
     }
 }
 </script>

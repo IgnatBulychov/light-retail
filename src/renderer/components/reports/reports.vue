@@ -18,15 +18,11 @@
 <script>
 const fs = require("fs");
 import Alert from '../alerts/alert.vue'
+const w = require('node-atol-wrapper');
+const fptr = new w.Fptr10();
 const remote = require('electron').remote;
 const application = remote.app;
 
-const mainAppPath = application.getAppPath().replace('\\app.asar', '') 
-
-const pythonPath = mainAppPath + '\\atol_python\\python\\python.exe'
-const pythonScriptPath = mainAppPath + '\\atol_python'
-
-let {PythonShell} = require('python-shell')
 
 export default {
 name: 'reports',
@@ -48,7 +44,23 @@ data() {
 },
 mounted() {
   this.$store.dispatch('settings/getSettings')
+  fptr.create();
+  let settings = {}
+  settings = fptr.getSettings();     
+  settings.Port = this.currentFiscalPrinter.settings.connection;  // ComPort communication
+  // settings.ComFile = '/dev/ttyACM0'; //ComPort name
+  settings.ComFile = this.currentFiscalPrinter.settings.comFile;  // ComPort name
+  settings.BaudRate = this.currentFiscalPrinter.settings.baudRate;
+  settings.IPAddress = this.currentFiscalPrinter.settings.IPAddress;
+  settings.IPPort = this.currentFiscalPrinter.settings.IPPort;
+  console.log('setSettings', fptr.setSettings(settings));
+  console.log('getSettings',fptr.getSettings());
+  fptr.open()
 },
+destroyed() {
+      fptr.close()
+      fptr.destroy()
+    },
 computed: {
   currentFiscalPrinter() {
     return this.$store.getters['equipment/currentFiscalPrinter']
@@ -60,7 +72,7 @@ computed: {
 methods: {
   openShift() {
     let app = this
-    app.openShiftLodaing = true
+    app.reportXLodaing = true
     let task = {}
     task.type = "openShift"
     task.operator = {}
@@ -68,11 +80,36 @@ methods: {
     if (task.operator.vatin) {
       task.operator.vatin = app.currentUser.vatin
     }
-    this.makeJsonTask(JSON.stringify(task)) 
+    fptr.processJsonAsync(
+    task,
+    (err, result) => {
+      if (err) {
+        app.reportXLodaing = false
+        app.alert = {
+          show: true,
+          timeout: 3000,
+          type: "error",
+          text: 'Нет связи с кассой'
+        }
+        fptr.close()   
+        throw err;
+      } else {
+        app.reportXLodaing = false
+        console.log('reportX', result);  
+        app.alert = {
+          show: true,
+          timeout: 3000,
+          type: "success",
+          text: 'Операция выполнена'
+        }
+        fptr.close()      
+      }
+    });
+    
     fs.writeFileSync(application.getPath('userData') + "/logs/" + new Date().toLocaleString().replace(/:/g, '-') + "-openShift.log", task)
   },
   reportX() {
-    let app = this
+     let app = this
     app.reportXLodaing = true
     let task = {}
     task.type = "reportX"
@@ -81,12 +118,36 @@ methods: {
     if (task.operator.vatin) {
       task.operator.vatin = app.currentUser.vatin
     }
-    this.makeJsonTask(JSON.stringify(task)) 
+    fptr.processJsonAsync(
+    task,
+    (err, result) => {
+      if (err) {
+        app.reportXLodaing = false
+        app.alert = {
+          show: true,
+          timeout: 3000,
+          type: "error",
+          text: 'Нет связи с кассой'
+        }
+        fptr.close()   
+        throw err;
+      } else {
+        app.reportXLodaing = false
+        app.alert = {
+          show: true,
+          timeout: 3000,
+          type: "success",
+          text: 'Операция выполнена'
+        } 
+        fptr.close()   
+        console.log('reportX', result);        
+      }
+    });
     fs.writeFileSync(application.getPath('userData') + "/logs/" + new Date().toLocaleString().replace(/:/g, '-') + "-reportX.log", task)
   },
   closeShift() {
-    let app = this
-    app.closeShiftLodaing = true
+     let app = this
+    app.reportXLodaing = true
     let task = {}
     task.type = "closeShift"
     task.operator = {}
@@ -94,83 +155,37 @@ methods: {
     if (task.operator.vatin) {
       task.operator.vatin = app.currentUser.vatin
     }
-    this.makeJsonTask(JSON.stringify(task)) 
-    fs.writeFileSync(application.getPath('userData') + "/logs/" + new Date().toLocaleString().replace(/:/g, '-') + "-closeShift.log", task)
-  },
-  stopLoading() {
-    this.openShiftLodaing = false
-    this.closeShiftLodaing = false
-    this.reportXLodaing = false
-  },
-  makeJsonTask(task) {
-    let app = this    
-    console.log(pythonScriptPath)
-    console.log(pythonPath)
-    let options = app.pythonShellOptionsPRO(task)
-    console.log(options)
-    PythonShell.run('json_task.py', options, function (err, results) {
-      if (err) throw err;
-
-      if (results[0] == 'connectionFailed') {
+    fptr.processJsonAsync(
+    task,
+    (err, result) => {
+      if (err) {
+        app.reportXLodaing = false
         app.alert = {
           show: true,
           timeout: 3000,
           type: "error",
           text: 'Нет связи с кассой'
         }
-        app.stopLoading()
-      } else if (results[0] == 'error') {
-        app.alert = {
-          show: true,
-          timeout: 3000,
-          type: "error",
-          text: 'Неверная команда'
-        }
-        app.stopLoading()
-      } else if (results[0] == '""') {
-        app.alert = {
-          show: true,
-          timeout: 3000,
-          type: "error",
-          text: 'Операция выполнена'
-        }
-        app.stopLoading()
+        fptr.close()   
+        throw err;
       } else {
+        app.reportXLodaing = false
         app.alert = {
           show: true,
           timeout: 3000,
-          type: "error",
+          type: "success",
           text: 'Операция выполнена'
-        }
-        app.stopLoading()
+        } 
+        fptr.close()   
+        console.log('closeShift', result);        
       }
-    });    
+    });
+    fs.writeFileSync(application.getPath('userData') + "/logs/" + new Date().toLocaleString().replace(/:/g, '-') + "-closeShift.log", task)
   },
-  pythonShellOptionsDEV(task) {
-    let app = this
-    return {
-      mode: 'text',
-      pythonPath: 'atol_python/python/python.exe',
-      pythonOptions: ['-u'],
-      scriptPath: 'atol_python',
-      args: [
-        app.currentFiscalPrinter.settings.model, app.currentFiscalPrinter.settings.connection, app.currentFiscalPrinter.settings.comFile, 
-        app.currentFiscalPrinter.settings.baudRate, app.currentFiscalPrinter.settings.IPAddress, app.currentFiscalPrinter.settings.IPPort, task
-      ] 
-    }
-  },
-  pythonShellOptionsPRO(task) {
-    let app = this
-    return {
-      mode: 'text',
-      pythonPath: pythonPath,
-      pythonOptions: ['-u'],
-      scriptPath: pythonScriptPath,
-      args: [
-        app.currentFiscalPrinter.settings.model, app.currentFiscalPrinter.settings.connection, app.currentFiscalPrinter.settings.comFile, 
-        app.currentFiscalPrinter.settings.baudRate, app.currentFiscalPrinter.settings.IPAddress, app.currentFiscalPrinter.settings.IPPort, task
-      ]
-    }
+  stopLoading() {
+    this.openShiftLodaing = false
+    this.closeShiftLodaing = false
+    this.reportXLodaing = false
   }
 }
 }

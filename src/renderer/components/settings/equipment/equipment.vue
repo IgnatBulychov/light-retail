@@ -48,6 +48,14 @@
                 >
                   Атол
                 </v-btn>
+                 <v-btn
+                  color="primary"
+                  tile outlined 
+                  text
+                  @click="dialogSelectFiscalPrinterModel = false; dialogMercSettings = true"
+                >
+                  Меркурий
+                </v-btn>
               </v-card-actions>
             </v-card>
           </v-dialog>
@@ -57,6 +65,13 @@
               v-on:save-fiscal-printer="createFiscalPrinter"
             ></atol-settings>
           </v-dialog>
+
+          <v-dialog v-model="dialogMercSettings" max-width="80%" >
+            <merc-settings
+              v-on:save-fiscal-printer="createFiscalPrinter"
+            ></merc-settings>
+          </v-dialog>
+
 
           <v-dialog v-model="dialogScannerSettings" max-width="80%" >
             <scanner-settings
@@ -124,11 +139,13 @@
 
 import ScannerSettings from './scanners/scanner-settings.vue'
 import AtolSettings from './fiscalPrinters/atol-settings.vue'
+import MercSettings from './fiscalPrinters/merc-settings.vue'
+import Alert from '../../alerts/alert'
 
 export default {
   name: 'equipment',
   components: {
-    ScannerSettings, AtolSettings
+    Alert, ScannerSettings, AtolSettings, MercSettings
   },
   data() {
       return {
@@ -137,7 +154,14 @@ export default {
         valid: true,
         dialogSelectFiscalPrinterModel: false,
         dialogAtolSettings: false,
-        dialogScannerSettings: false
+        dialogMercSettings: false,
+        dialogScannerSettings: false,
+        alert: {
+          type: 'success',
+          show: false,
+          text: '',
+          timeout: 3000
+        }
       }
   },
   computed: {
@@ -155,36 +179,20 @@ export default {
   methods: {
     createFiscalPrinter(fiscalPrinter) {
       let app = this
-      this.$store.dispatch('fiscalPrinters/createFiscalPrinter', fiscalPrinter)
-      app.dialogSettings = false
-      this.alert = {
+      this.$store.dispatch('equipment/createEquipmentItem', fiscalPrinter)
+      app.dialogAtolSettings = false
+      app.dialogMercSettings = false
+      app.alert = {
         show: true,
         type: "success",
         timeout: 2000,
         text: 'Настройки сохранены'
       }
     },
-    updateFiscalPrinter(fiscalPrinter) {
-      this.$store.dispatch('fiscalPrinters/updateFiscalPrinter', fiscalPrinter)
-    },
-    removeFiscalPrinter(id) {
-      this.$store.dispatch('fiscalPrinters/removeFiscalPrinter', id)
-    },
-
     removeEquipmentItem(id){
       this.$store.dispatch('equipment/removeEquipmentItem', id)
     },
-    createFiscalPrinter(fiscalPrinter) {
-      let app = this
-      this.$store.dispatch('equipment/createEquipmentItem', fiscalPrinter)
-      app.dialogAtolSettings = false
-      this.alert = {
-        show: true,
-        type: "success",
-        timeout: 2000,
-        text: 'Настройки сохранены'
-      }
-    },
+    
     createScanner(scanner) {
       let app = this
       this.$store.dispatch('equipment/createEquipmentItem', scanner)

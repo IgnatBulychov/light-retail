@@ -49,169 +49,11 @@
       <span>Удалить выбранное</span>
     </v-tooltip> 
 
-    <!-- диалоговые окна -->
     
-    <v-dialog v-model="dialogCreateItem" min-width="80%" >
-      <v-card>
-        <v-card-title>
-        </v-card-title>
-        <v-card-text>
-          <v-text-field
-              v-model="item.title"
-              label="Наименование"
-          ></v-text-field>
-          <v-text-field
-              v-model="item.price"
-              label="Цена"
-          ></v-text-field>     
-          <form @submit.prevent="addBarcode()">
-            <v-text-field
-                v-model="barcode"
-                label="Штрихкод"
-            ></v-text-field>
-            <v-tooltip bottom>
-              <template v-slot:activator="{ on, attrs }">
-                <v-btn v-bind="attrs" v-on="on" icon type="submit">  
-                    <v-icon class="warning--text">mdi-plus</v-icon>           
-                  </v-btn>
-              </template>
-              <span>Добавить штрихкод</span>
-            </v-tooltip> 
-            <v-chip
-              v-for="(barcode, key) in item.barcodes" :key="key"
-              class="ma-2"
-              color="secondary"
-              text-color="white"
-            >
-              {{ barcode }}
-              <v-btn  @click="item.barcodes.splice(key, 1)" icon>  
-                <v-icon class="error--text">mdi-close-circle-outline</v-icon>           
-              </v-btn>
-            </v-chip>                    
-          </form>
-          <v-switch
-            v-model="item.mark"
-            color="green"
-            label="Маркированный товар"
-          ></v-switch>
-          <v-select
-            :items="measureNames"
-            label="Единица измерения"
-            v-model="item.measureName"
-          ></v-select>
-          
-          <v-select
-            :items="taxes"
-            label="Налоговая ставка"
-            v-model="item.tax"
-          ></v-select>
-          <v-btn class="success" @click="createItem()">Создать товар</v-btn>
-        </v-card-text>
-      </v-card>
-    </v-dialog>
-
-    <v-dialog v-model="dialogUpdateItem" min-width="80%" >
-      <v-card>
-        <v-card-title>
-        </v-card-title>
-        <v-card-text>
-          <v-text-field
-              v-model="itemForUpdate.title"
-              label="Наименование"
-          ></v-text-field>
-          <v-text-field
-              v-model="itemForUpdate.price"
-              label="Цена"
-          ></v-text-field>   
-          <form @submit.prevent="addBarcodeToItemForUpdate()">
-            <v-text-field
-                v-model="barcodeForItemForUpdate"
-                label="Штрихкод"
-            ></v-text-field>
-            <v-tooltip bottom>
-              <template v-slot:activator="{ on, attrs }">
-                <v-btn v-bind="attrs" v-on="on" icon type="submit">  
-                    <v-icon class="warning--text">mdi-plus</v-icon>           
-                  </v-btn>
-              </template>
-              <span>Добавить штрихкод</span>
-            </v-tooltip> 
-            <v-chip
-              v-for="(barcode, key) in itemForUpdate.barcodes" :key="key"
-              class="ma-2"
-              color="secondary"
-              text-color="white"
-            >
-              {{ barcode }}
-              <v-btn  @click="itemForUpdate.barcodes.splice(key, 1)" icon>  
-                <v-icon class="error--text">mdi-close-circle-outline</v-icon>           
-              </v-btn>
-            </v-chip>                    
-          </form>
-          <v-switch
-            v-model="itemForUpdate.mark"
-            color="green"
-            label="Маркированный товар"
-          ></v-switch>
-          <v-select
-            :items="measureNames"
-            label="Единица измерения"
-            v-model="itemForUpdate.measureName"
-          ></v-select>
-          <v-select
-            :items="taxes"
-            label="Налоговая ставка"
-            v-model="itemForUpdate.tax"
-          ></v-select>
-          <v-btn class="success" @click="updateItem()">Изменить товар</v-btn>
-        </v-card-text>
-      </v-card>
-    </v-dialog>
-
-    <v-dialog v-model="dialogCreateFolder" min-width="80%" >
-      <v-card>
-        <v-card-title>
-        </v-card-title>
-        <v-card-text>
-          <v-text-field
-              v-model="folder.title"
-              label="Наименование"
-          ></v-text-field>
-          
-          <v-select
-            :items="taxationTypes"
-            label="СНО товаров или услуг каталога"
-            v-model="folder.taxationType"
-          ></v-select>
-          <v-btn class="success" @click="createFolder()">Создать каталог</v-btn>
-        </v-card-text>
-      </v-card>
-    </v-dialog>
-
-    <v-dialog v-model="dialogUpdateFolder" min-width="80%" >
-      <v-card>
-        <v-card-title>
-        </v-card-title>
-        <v-card-text>
-          <v-text-field
-              v-model="folderForUpdate.title"
-              label="Наименование"
-          ></v-text-field>
-          
-          <v-select
-            :items="taxationTypes"
-            label="СНО товаров или услуг каталога"
-            v-model="folderForUpdate.taxationType"
-          ></v-select>               
-          <v-btn class="success" @click="updateFolder()">Изменить каталог</v-btn>
-        </v-card-text>
-      </v-card>
-    </v-dialog>
-
     <!-- Список товаров и каталогов -->
     
     <v-card >
-      <v-container>
+      <v-container fluid>
 
         <!-- кнопка "назад", в прошлый каталог -->
 
@@ -325,6 +167,25 @@
     </div>
       </v-container>
     </v-card>
+
+    <!-- диалоговые окна -->
+    
+    <v-dialog v-model="dialogCreateItem" min-width="80%" >
+        <create-item @itemWasCreated="itemWasCreated"/>
+    </v-dialog>
+
+    <v-dialog v-model="dialogUpdateItem" min-width="80%" >
+      <update-item @itemWasUpdated="itemWasUpdated" :itemForUpdate="itemForUpdate"/>
+    </v-dialog>
+
+    <v-dialog v-model="dialogCreateFolder" min-width="80%" >
+      <create-folder @folderWasCreated="folderWasCreated" />
+    </v-dialog>
+
+    <v-dialog v-model="dialogUpdateFolder" min-width="80%" >
+      <update-folder @folderWasUpdated="folderWasUpdated" :folderForUpdate="folderForUpdate"/>
+    </v-dialog>
+
     
     <alert :alert="alert" :timeout="5000"/>
 
@@ -335,16 +196,18 @@
 
 <script>
 import { findFolderParent } from '../../store/dbAPI/items/findFolderParent'
-import taxationTypes from '../resources/taxationTypes.js'
-import measureNames from '../resources/measureNames.js'
-import taxes from '../resources/taxes.js'
-import ScannerComPort from './../equipment/scanner-com-port'
 
+import ScannerComPort from './../equipment/scanner-com-port' //в перспективе нужен для поиска товара
+import CreateItem from './create-item.vue'
+import UpdateItem from './update-item.vue'
+import CreateFolder from './create-folder.vue'
+import UpdateFolder from './update-folder.vue'
 import Alert from '../alerts/alert'
-    export default {
+
+export default {
     name: 'items',  
     components: {
-      Alert, ScannerComPort
+      Alert, ScannerComPort, CreateItem, UpdateItem, CreateFolder, UpdateFolder
     },
     data() {
       return {
@@ -354,45 +217,8 @@ import Alert from '../alerts/alert'
         dialogUpdateFolder: false,
         selectedItems: [],
         selectedFolders: [],
-        barcode: "",
-        barcodeForItemForUpdate: "",
-        item:{
-              title: '',
-              price: null,
-              costPrice: null,
-              quantity: 0,
-              barcodes:[],
-              mark: false,
-              measureName: 'шт',
-              measureType: "integer",
-              tax: 'none',
-              parent: "root"
-          },
-          itemForUpdate: {
-              title: '',
-              price: null,
-              costPrice: null,
-              barcodes:[],
-              quantity: 0,
-              mark: false,
-              measureName: 'шт',
-              measureType: "integer",
-              tax: 'none',
-              parent: "root"
-          },
-          folder:{
-              title: '',
-              parent: "root",
-              taxSystem: null
-          },
-          folderForUpdate:{
-              title: '',
-              parent: "root",
-              taxSystem: null
-          },
-          taxationTypes: taxationTypes,
-          measureNames: measureNames,
-          taxes: taxes
+        itemForUpdate: {},
+        folderForUpdate: {}
       }
     },
     mounted() {      
@@ -430,90 +256,23 @@ import Alert from '../alerts/alert'
       
     },
     methods: { 
-      addBarcode() {
-        this.item.barcodes.push(Number(this.barcode))
-        this.barcode = ''
-      }, 
-      addBarcodeToItemForUpdate() {
-        this.itemForUpdate.barcodes.push(Number(this.barcodeForItemForUpdate))
-        this.barcodeForItemForUpdate = ''
-      }, 
-      scanFromComPortDataMatrix(code) {
-        console.log('доб', code )
-        let ean13 = Number(code.slice(3, 16))
-        if (this.dialogCreateItem) {
-          this.item.barcodes.push(ean13)
-        } 
-        if (this.dialogUpdateItem) {
-          this.itemForUpdate.barcodes.push(ean13)
-        }
-      },
-      scanFromComPortEan13(code) {
-        console.log('доб', code )
-        if (this.dialogCreateItem) {
-          this.item.barcodes.push(Number(code))
-        } 
-        if (this.dialogUpdateItem) {
-          this.itemForUpdate.barcodes.push(Number(code))
-        }
-      },    
-      createItem() {
-        this.item.parent = this.$route.query.folder
-        if (this.item.measureName == 'шт' || this.item.measureName == 'компл' || this.item.measureName == 'упак' || this.item.measureName == 'ед' || this.item.measureName == 'пар' || this.item.measureName == 'пач') {
-          this.item.measureType = "integer"
-        } else {
-          this.item.measureType = "float"
-        }       
-        this.$store.dispatch('items/createItem', this.item)
-        // сброс формы товара      
-        this.dialogCreateItem = false
-        this.item ={
-              title: '',
-              price: null,
-              costPrice: null,
-              quantity: 0,
-              barcodes:[],
-              mark: false,
-              measureName: 'шт',
-              measureType: "integer",
-              tax: 'none',
-              parent: "root"
-          }
-      },
-      updateItem() {
-        console.log(this.itemForUpdate)
-        if (this.itemForUpdate.measureName == 'шт' || this.itemForUpdate.measureName == 'компл' || this.itemForUpdate.measureName == 'упак' || this.itemForUpdate.measureName == 'ед' || this.itemForUpdate.measureName == 'пар' || this.itemForUpdate.measureName == 'пач') {
-          this.itemForUpdate.measureType = "integer"
-        } else {
-          this.itemForUpdate.measureType = "float"
-        }
-        this.$store.dispatch('items/updateItem', this.itemForUpdate)
-        this.dialogUpdateItem = false
-      },
+      
       //удаляет и item и folder
-      remove() {        
+      remove() { 
+           
         if (this.selectedItems.length) {
-          this.$store.dispatch('items/removeItems', this.selectedItems)
-           this.selectedItems = []
+          let items = []
+          this.selectedItems.forEach(element => {
+            items.push(this.items.find(item => item._id == element))
+          });
+          
+          this.$store.dispatch('items/removeItems', items)
+          this.selectedItems = []
         }
         if (this.selectedFolders.length) {
           this.$store.dispatch('items/removeFolders', this.selectedFolders)
           this.selectedFolders = []
         }    
-      },
-      createFolder() {
-        // указываем родительский каталог для нового каталога
-        this.folder.parent = this.$route.query.folder
-        this.$store.dispatch('items/createFolder', this.folder)
-        //сброс формы создания каталога
-        this.dialogCreateFolder = false
-        this.folder = {
-            title: ''
-        }
-      },
-      updateFolder() {
-        this.$store.dispatch('items/updateFolder', this.folderForUpdate)
-        this.dialogUpdateFolder = false
       },
       back() {
         let app = this
@@ -526,8 +285,25 @@ import Alert from '../alerts/alert'
             }
           })
         });
-        
-      }
+      },
+      itemWasCreated() {
+        this.dialogCreateItem = false
+      },
+      itemWasUpdated() {
+        this.dialogUpdateItem= false
+      },
+      folderWasCreated() {
+        this.dialogCreateFolder = false
+      },
+      folderWasUpdated() {
+        this.dialogUpdateFolder = false
+      },
+      scanFromComPortDataMatrix(code) {
+        console.log('доб', code )
+      },
+      scanFromComPortEan13(code) {
+        console.log('доб', code )
+      },
     }
   }
 </script>

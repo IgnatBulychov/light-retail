@@ -9,7 +9,7 @@ export const updateFolderInBase = function(folder) {
     db.loadDatabase(function (err) { 
       db.update({ _id: folder._id }, { $set: { 
             title: folder.title,
-            taxSystem: folder.taxSystem
+            taxationType: folder.taxationType
           } }, { multi: true }, function (err, numReplaced) {
           if (err) {
               reject(false)

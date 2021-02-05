@@ -21,14 +21,44 @@
         <v-dialog 
           eager 
           @keydown.esc="dialogCreateCustomer = false"
-          max-width="50%"
+          max-width="80%"
           v-model="dialogCreateCustomer"  
           v-on:click:outside="dialogCreateCustomer = false" 
         >
           <create-customer @close-dialog="dialogCreateCustomer = false"/>
         </v-dialog>
 
+        <v-dialog 
+          eager 
+          @keydown.esc="dialogUpdateCustomer = false"
+          max-width="80%"
+          v-model="dialogUpdateCustomer"  
+          v-on:click:outside="dialogUpdateCustomer = false" 
+        >
+          <update-customer :customerForUpdate="customerForUpdate" @close-dialog="dialogUpdateCustomer = false"/>
+        </v-dialog>
+
         <div v-if="customers.length">
+          <v-row>            
+            <v-col cols="1">
+              #
+            </v-col>
+            <v-col cols="4">
+              Имя/Название
+            </v-col>
+            <v-col cols="2">
+              Телефон
+            </v-col>
+            <v-col cols="2">
+              E-mail
+            </v-col>
+            <v-col cols="2">
+              ИНН
+            </v-col>
+            <v-col cols="1">
+              Действия
+            </v-col>
+          </v-row>
           <v-row v-for="(customer, key) in customers" :key="customer._id">            
             <v-col cols="1">
               <div class="py-5"> {{ key + 1 }} </div>
@@ -49,7 +79,7 @@
               <div class="py-5">
                 <v-tooltip bottom>
                   <template v-slot:activator="{ on, attrs }">
-                    <v-btn v-bind="attrs" v-on="on" icon @click="userForUpdate = Object.assign({}, user); dialogUpdateUser = true">  
+                    <v-btn v-bind="attrs" v-on="on" icon @click="customerForUpdate = Object.assign({}, customer); dialogUpdateCustomer = true">  
                         <v-icon class="warning--text">mdi-pen</v-icon>           
                       </v-btn>
                   </template>
@@ -75,18 +105,22 @@
 
 <script>
 import CreateCustomer from './createCustomer.vue'
+import UpdateCustomer from './updateCustomer.vue'
+
 export default {
   name: 'customers',
   components: {
-    CreateCustomer
+    CreateCustomer, UpdateCustomer
   },
   data() {
     return {
-      dialogCreateCustomer: false
+      dialogCreateCustomer: false,
+      dialogUpdateCustomer: false,
+      customerForUpdate: {}
     }
   }, 
   mounted() {
-    this.$store.dispatch('customer/getCustomers')
+    this.$store.dispatch('customers/getCustomers')
   },
   computed: {
     customers() {
@@ -95,7 +129,7 @@ export default {
   },
   methods: {
     removeCustomer(id) {
-      this.$store.dispatch('customer/removeCustomer', id)
+      this.$store.dispatch('customers/removeCustomer', id)
     }
   }
 }

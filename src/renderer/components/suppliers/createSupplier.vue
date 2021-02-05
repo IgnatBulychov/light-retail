@@ -32,7 +32,7 @@
           :rules="emailRules"
         ></v-text-field>   
         <v-text-field
-          placeholder="Телефон"
+          placeholder="ИНН"
           v-model="customer.phone"
           :rules="phoneRules"
         ></v-text-field>              
@@ -49,7 +49,7 @@
 
 <script>
 export default {
-  name: 'create-customer',
+  name: 'create-supplier',
   data() {
     return {
       valid:true,

@@ -19,7 +19,7 @@
           </v-list-item-icon>
           <v-list-item-title>Меню</v-list-item-title>
         </v-list-item>
-        <v-list-item color="success" link to='/dashboard/registration'>
+        <v-list-item color="success" link to='/dashboard/registration?folder=root'>
           <v-list-item-icon>
             <v-icon>mdi-printer-pos</v-icon>
           </v-list-item-icon>
@@ -37,6 +37,18 @@
           </v-list-item-icon>
           <v-list-item-title>Товары</v-list-item-title>
         </v-list-item>
+        <v-list-item v-if="currentUser.role == 'admin'" color="success" link to='/dashboard/customers'>
+          <v-list-item-icon>
+            <v-icon>mdi-account-multiple-outline</v-icon>
+          </v-list-item-icon>
+          <v-list-item-title>Клиенты</v-list-item-title>
+        </v-list-item>
+        <v-list-item v-if="currentUser.role == 'admin'" color="success" link to='/dashboard/suppliers'>
+          <v-list-item-icon>
+            <v-icon>mdi-account-box-multiple-outline</v-icon>
+          </v-list-item-icon>
+          <v-list-item-title>Поставщики</v-list-item-title>
+        </v-list-item>
         <v-list-item v-if="currentUser.role == 'admin'" color="success" link to='/dashboard/settings'>
           <v-list-item-icon>
             <v-icon>mdi-cogs</v-icon>
@@ -45,7 +57,7 @@
         </v-list-item>
         <v-list-item color="success" link to='/'>
           <v-list-item-icon>
-            <v-icon>mdi-account-outline</v-icon>
+            <v-icon>mdi-account-convert</v-icon>
           </v-list-item-icon>
           <v-list-item-title>Сменить пользователя</v-list-item-title>
         </v-list-item>

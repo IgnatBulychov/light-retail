@@ -1,3 +1,4 @@
+import { getAllItemsFromBase } from '../dbAPI/items/getAllItems'
 import { getItemsFromBase } from '../dbAPI/items/getItems'
 import { findFolderItems } from '../dbAPI/items/findFolderItems'
 import { createItemInBase } from '../dbAPI/items/createItem'
@@ -13,6 +14,7 @@ import { removeFoldersFromBase } from '../dbAPI/items/removeFolders'
 
 const state = {
   items: [],
+  allItems: [],
   folders: [],
   currentFolder: null,
   alert: {
@@ -33,6 +35,9 @@ const mutations = {
   setItems (state, items) {
     state.items = items
   },
+  setAllItems (state, items) {
+    state.allItems = items
+  },
   setFolders (state, folders) {
     state.folders = folders
   },
@@ -45,6 +50,11 @@ const actions = {
   getItems ({ commit }, parent) {
     getItemsFromBase(parent).then(items => {
       commit('setItems', items)
+    });
+  }, 
+  getAllItems ({ commit }) {
+    getAllItemsFromBase().then(items => {
+      commit('setAllItems', items)
     });
   },  
   createItem ({ commit, dispatch }, item) {
@@ -60,6 +70,7 @@ const actions = {
     });
   },
   removeItems ({ commit, dispatch }, items) {
+    console.log('родитель удаленного товара', items)
     removeItemsFromBase(items).then(result => {
       //узнаем родителя у удаленного товара(первого попавшегося) и извлекаем товары этого каталога заново
       dispatch('getItems', items[0].parent)

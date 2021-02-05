@@ -7,7 +7,7 @@ var db = new Datastore({ filename: `${application.getPath('userData')}/base/supp
 export const createSupplierInBase = function(supplier) {    
   return new Promise(function(resolve, reject){
     db.loadDatabase(function (err) { 
-        db.insert(customer, function (err, newDoc) { 
+        db.insert(supplier, function (err, newDoc) { 
           if (err) {
               reject(false)
           }

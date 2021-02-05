@@ -19,7 +19,6 @@
     "rebuild": "electron-rebuild -f -w serialport"
   },
   "build": {
-    "extraResources": "atol_python",
     "productName": "LiteRetail",
     "appId": "com.example.literetail",
     "directories": {
@@ -58,7 +57,10 @@
     "axios": "^0.18.0",
     "bufferutil": "^4.0.3",
     "express": "^4.17.1",
+    "https": "^1.0.0",
+    "https-proxy-agent": "^5.0.0",
     "nedb": "^1.8.0",
+    "net": "^1.0.2",
     "node-atol-wrapper": "0.0.20",
     "python-shell": "^1.0.8",
     "serialport": "^9.0.4",
