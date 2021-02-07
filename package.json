@@ -59,6 +59,7 @@
     "express": "^4.17.1",
     "https": "^1.0.0",
     "https-proxy-agent": "^5.0.0",
+    "md5": "^2.3.0",
     "nedb": "^1.8.0",
     "net": "^1.0.2",
     "node-atol-wrapper": "0.0.20",

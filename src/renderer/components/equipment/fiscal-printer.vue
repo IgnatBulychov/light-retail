@@ -9,7 +9,7 @@ const remote = require('electron').remote;
 const application = remote.app;
 export default {
     name: 'fiscal-printer',
-    props: [ 'print', 'summ', 'getFromCustomer', 'checkType', 'items', 'taxationType', 'paymentType', 'customer'],
+    props: [ 'print', 'summ', 'getFromCustomer', 'paymentType'],
     data() {
         return {
         }
@@ -36,8 +36,20 @@ export default {
       currentFiscalPrinter() {
         return this.$store.getters['equipment/currentFiscalPrinter']
       },
+      items() {
+        return this.$store.state.check.items
+      },
       currentUser() {
         return this.$store.state.users.currentUser
+      },
+      taxationType() {
+          return this.$store.state.check.checkSettings.taxationType
+      },
+      checkType() {
+          return this.$store.state.check.checkSettings.checkType
+      },
+      customer() {
+          return this.$store.state.check.checkSettings.customer
       },
     },
     watch: {

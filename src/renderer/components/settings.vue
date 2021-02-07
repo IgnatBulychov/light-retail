@@ -146,104 +146,6 @@
       </v-container>          
     </v-tab-item>
 
-    <!-- разед настройки касс -->
-  <!--  <v-tab-item>
-      <v-container fluid>
-        <v-card>
-          <v-card-text>
-            <div class="mx-auto  px-2 py-2" >          
-              <v-tooltip top>
-                <template v-slot:activator="{ on, attrs }">
-                  <v-btn
-                    v-bind="attrs" v-on="on"
-                    color="success"
-                    dark
-                    icon
-                    @click.stop="dialogSelectModel = true"
-                  >
-                    <v-icon>mdi-plus</v-icon> 
-                  </v-btn>
-                </template>
-                <span>Добавить кассу</span>
-              </v-tooltip> 
-
-              <v-dialog
-                v-model="dialogSelectModel"
-                max-width="50%"
-              >
-                <v-card>
-                  <v-card-title class="headline">Выберите модель кассы</v-card-title>
-                  <v-card-actions>
-                    <v-btn
-                      color="primary"
-                      tile outlined 
-                      text
-                      @click="dialogSelectModel = false; dialogSettings = true"
-                    >
-                      Атол
-                    </v-btn>
-                  </v-card-actions>
-                </v-card>
-              </v-dialog>
-
-              <v-dialog v-model="dialogSettings" max-width="80%" >
-                <atol-settings
-                  v-on:save-fiscal-printer="createFiscalPrinter"
-                ></atol-settings>
-              </v-dialog>
-            </div>  
-
-            <v-row>
-              <v-col cols="1">#
-              </v-col>
-              <v-col cols="2">Текущая касса
-              </v-col>
-              <v-col cols="3">Модель
-              </v-col>
-              <v-col cols="3">Заводской номер
-              </v-col>
-              <v-col cols="3">Действия
-              </v-col>
-            </v-row>
-
-            <div v-if="fiscalPrinters.length">
-              <v-row v-for="(fiscalPrinter, key) in fiscalPrinters" :key="fiscalPrinter._id">            
-                <v-col cols="1">
-                  <div class="py-5"> {{ key + 1 }} </div>
-                </v-col>
-                <v-col cols="2"> 
-                  <v-switch 
-                    v-model="listActivity[key]"
-                    @change="updateFiscalPrinter(fiscalPrinter, key)"
-                  ></v-switch>
-                </v-col>
-                <v-col cols="3">                   
-                  <div class="py-5"> {{ fiscalPrinter.model }} </div>
-                </v-col>
-                <v-col cols="3"> 
-                  <div class="py-5"> {{ fiscalPrinter.serial }} </div>
-                </v-col>
-                <v-col cols="3">
-                  <div class="py-5">
-                    <v-tooltip bottom>
-                      <template v-slot:activator="{ on, attrs }">
-                        <v-btn v-bind="attrs" v-on="on" icon  @click="removeFiscalPrinter(fiscalPrinter._id)">  
-                            <v-icon class="error--text">mdi-delete-outline</v-icon>           
-                          </v-btn>
-                      </template>
-                      <span>Удалить кассу</span>
-                    </v-tooltip> 
-                  </div>
-                </v-col>            
-              </v-row>
-            </div>
-            <div v-else class="text-center"> Нет подключенных касс </div> 
-          </v-card-text>
-        </v-card>
-      </v-container>
-    </v-tab-item>
-
-    -->
 
     <v-tab-item>
       <equipment />
@@ -311,7 +213,7 @@ import Alert from './alerts/alert.vue'
 import MainSettings from './settings/main-settings.vue'
 import Equipment from './settings/equipment/equipment.vue'
 
-
+var md5 = require('md5');
 export default {
   name: 'settings',
   components: {
@@ -410,6 +312,7 @@ export default {
     },
     createUser() {
       if (this.$refs.formCreateUser.validate()) {
+        this.user.password = md5(this.user.password)
         this.$store.dispatch('users/createUser',this.user)
         this.dialogCreateUser = false
         this.user = {
@@ -423,9 +326,10 @@ export default {
     },
     updateUser() {
       if (this.$refs.formUpdateUser.validate()) {
-        this.$store.dispatch('users/updateUser', this.userForUpdate)
+        
         if (this.userForUpdate._id == this.currentUser._id) {
-          this.$store.commit('users/setCurrentUser', this.userForUpdate)
+          this.$store.dispatch('users/updateUser', this.userForUpdate)
+          this.userForUpdate.password = md5(this.userForUpdate.password)
         }
         this.dialogUpdateUser = false
         this.userForUpdate = {

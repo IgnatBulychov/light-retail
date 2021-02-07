@@ -1,5 +1,8 @@
 <template>
   <div @click="$refs.barcodeInput.focus()"  color="grey lighten-2" class="registration-block">
+
+    <item-finder />
+
     <div class="py-1 px-2 code-input">
       <v-form @submit.prevent="(inputCode == '') ? toPayment() : addItem() ">
         <v-text-field
@@ -109,10 +112,15 @@
     <div class="footer-bar" >
       <v-toolbar dark color="green lighten-5">    
         <v-toolbar-items>
-          
-          <v-btn @click="dialogAddItemFromBase = true"  icon color="success">
-              <v-icon>mdi-view-grid-plus</v-icon>
-          </v-btn> 
+
+          <v-tooltip top>
+            <template v-slot:activator="{ on, attrs }">
+              <v-btn  v-bind="attrs" v-on="on" @click="dialogAddItemFromBase = true" icon color="success">
+                  <v-icon>mdi-view-grid-plus</v-icon>
+                </v-btn>
+            </template>
+            <span>Добавить из базы</span>
+          </v-tooltip>
           
           <v-tooltip top>
             <template v-slot:activator="{ on, attrs }">
@@ -312,11 +320,7 @@
             :rules="quantityRules"
              v-on:keyup.enter="changeItem()"
           ></v-text-field>   
-           <v-select
-            :items="paymentMethods"
-            label="Способ расчета"
-            v-model="paymentMethodOfSelectedItem"
-          ></v-select>       
+      
         </v-card-text>
         <v-card-actions>    
            <v-spacer></v-spacer>
@@ -417,88 +421,11 @@
       v-model="dialogCheckSettings"  
       v-on:click:outside="dialogCheckSettings = false" 
     >
-    <v-card>
-      <v-card-title>
-        <span class="text-lg-h6">
-          Настройки чека
-        </span>
-        <v-spacer></v-spacer>
-          <v-btn icon @click="dialogCheckSettings = false">
-            <v-icon>mdi-close</v-icon>
-          </v-btn>
-        </v-card-title>
-       
-        <v-card-text text-center>
-           <v-form>
-          <v-select
-            :items="checkTypes"
-            label="Тип чека"
-            v-model="checkType"
-          ></v-select>     
-<div v-if="items.length">
-          <v-select
-            :items="taxationTypes"
-            label="СНО чека"
-            v-model="taxationType"
-            
-          ></v-select>           
-</div>
-  </v-form>
-<div v-if="customer">
-  Покупатель:
-<v-form v-model="validCustomer" lazy-validation>
-        
-        <v-text-field
-          placeholder="Название"
-          v-model="customer.name"
-          :rules="customerNameRules"
-        ></v-text-field> 
-        <v-text-field
-          placeholder="ИНН"
-          v-model="customer.vatin"
-          :rules="customerVatinRules"
-        ></v-text-field>    
-        <v-text-field
-          placeholder="Электронная почта"
-          v-model="customer.email"
-          :rules="customerEmailRules"
-        ></v-text-field>   
-        <v-text-field
-          placeholder="Телефон"
-          v-model="customer.phone"
-          :rules="customerPhoneRules"
-        ></v-text-field>              
-      
-    </v-form>   
-</div>
-
- <v-btn v-if="!customer" @click="dialogAddCustomer = true" color="green">
-                Добавить реквизиты покупателя       
-            </v-btn>  
-
-             <v-btn v-if="customer" @click="customer = false" color="error">
-                Удалить реквизиты покупателя       
-            </v-btn> 
-        </v-card-text>
-        <v-card-actions>    
-           <v-spacer></v-spacer>
-      
-          <v-btn @click="saveCheckSettings()" width="40%" height="50px" dark color="green lighten-2">
-                Сохранить       
-            </v-btn>
-             <v-spacer></v-spacer>          
-        </v-card-actions>
-      </v-card>
+      <check-settings 
+        @settings-was-saved="dialogCheckSettings = false"
+      />
     </v-dialog>
 
-    <v-dialog eager 
-      @keydown.esc="dialogAddCustomer = false"
-      max-width="50%"
-      v-model="dialogAddCustomer"  
-      v-on:click:outside="dialogAddCustomer = false" 
-    >
-      <add-customer @customerWasSelected="addCustomerToForm"/>
-    </v-dialog>
 
     <scanner-com-port 
       @scan-data-matrix="scanFromComPortDataMatrix" 
@@ -511,10 +438,8 @@
       :summ="summ" 
       :paymentType="paymentType" 
       :getFromCustomer="getFromCustomer" 
-      :checkType="checkType" 
-      :items="items" 
-      :taxationType="taxationType" 
-      :customer="customer"
+    
+  
     />
 
     <alert :alert="alert"/>
@@ -527,16 +452,14 @@ import { mdiDataMatrix } from '@mdi/js'
 import { convertKTN } from './../functions/convertKTN'
 import FiscalPrinter from './../equipment/fiscal-printer'
 import ScannerComPort from './../equipment/scanner-com-port'
-import taxationTypes from './../resources/taxationTypes'
-import checkTypes from './../resources/checkTypes'
-import paymentMethods from './../resources/paymentMethods'
 import AddItemFromBase from './add-item-from-base'
-import AddCustomer from './add-customer'
+
 import Alert from '../alerts/alert'
+import CheckSettings from './check-settings.vue'
 export default {
   name: 'registration',
   components: {
-    AddItemFromBase, Alert, ScannerComPort, FiscalPrinter, AddCustomer
+    AddItemFromBase, Alert, ScannerComPort, FiscalPrinter, CheckSettings
   },
   data() {
     return {
@@ -550,25 +473,14 @@ export default {
       dialogScanDatamatrix: false,
       dialogScanDatamatrixFromComPort: false,
       dialogCheckSettings: false,
-      dialogAddCustomer: false,
       datamatrixCode: "",
       nomenclatureCode: "",
       currentMarkItem: null,
-      getFromCustomer: "",
-      checkType: 'sell',
-      checkTypes,
-      paymentMethods,
-      paymentType: '',
-      paymentMethodOfSelectedItem: 'fullPayment',
-      taxationTypes,
+      getFromCustomer: "",    
+      paymentType: '',    
       quantity: "",
       quantityOfSelectedItem: "",
       print: false,
-      customer: false,
-      customerNameRules: [
-        v => !!v || 'Название - обязательное поле'
-      ],
-      validCustomer: true,
       alert: {
         show: false,
         timeout: 2000,
@@ -583,6 +495,7 @@ export default {
       fptr.destroy()
     },
   mounted () {
+    this.$store.commit('settings/getSettings')
     this.$refs.barcodeInput.focus()   
   },
   watch: {
@@ -609,14 +522,6 @@ export default {
     items() {
         return this.$store.state.check.items
     },
-    taxationType: {
-      get() {
-        return this.$store.state.check.checkSettings.taxationType
-      },
-      set(v) {
-        this.$store.commit('check/setTaxationType', v)
-      }
-    },
     quantityRules() {      
       if (isNaN(Number(this.quantity))) {
         return [v => v > 0 || 'Некорректное значение']
@@ -639,37 +544,10 @@ export default {
         }              
       }      
     },
-    customerEmailRules() {
-      if (!this.customer.phone) {
-        return [
-          v => !!v || 'Заполните телефон или E-mail',
-        ]
-      } else {
-        return []
-      }      
-    },
-    customerPhoneRules () {
-      if (!this.customer.email) {
-        return [
-          v => !!v || 'Заполните телефон или E-mail',
-        ]
-      } else {
-        return []
-      }      
-    },
-    customerVatinRules() {
-      if (this.customer.vatin) {
-        return [
-          v => (v.length == 0 || v.length == 12) || 'Некорректный ИНН',
-          v =>  /^\d+$/.test(v) || 'Некорректный ИНН'       
-        ]
-      } else {
-        return []
-      }
-    },
-    currentScanner() {
+    
+   /* currentScanner() {
       return this.$store.getters['equipment/currentScanner']
-    }
+    }*/
   },
   methods: {
     scanFromComPortEan13(code) {
@@ -706,21 +584,21 @@ export default {
     addItem () {
       let app = this
       if (app.inputCode !== "") {
-        if (app.inputCode.length == 13) {
+        if  (app.inputCode.length < 8){
           // если ean13
           app.$store.dispatch('check/getItemByBarcode', app.inputCode).then(item => {
             // если поиск вернет маркированный товар           
             app.toScanDatamatrix()
             app.currentMarkItem = item
           })
-        } else if (app.inputCode.length < 7) {
+        } else if (app.inputCode.length < 14)  {
           // если внутренний код
           app.$store.dispatch('check/getItemByCode', app.inputCode).then(item => {
             // если поиск вернет маркированный товар           
             app.toScanDatamatrix()
             app.currentMarkItem = item
           })
-        } else if (app.inputCode.length > 14) {
+        } else if (app.inputCode.length > 13) {
           // если код маркировки
           if (app.inputCode.length == 29) {
             // если DataMatrix (пункт 7 инструкции ЧЗ)
@@ -775,9 +653,6 @@ export default {
     },
     clearCheck() {
       this.$store.commit('check/clearCheck')
-      this.checkType = 'sell'
-      this.taxationType = ''
-      this.customer = {}
     },
     changePosition (to) {
       this.$store.dispatch('check/changePosition', to)
@@ -785,11 +660,7 @@ export default {
     changeQuantity(item, changing) {
       this.$store.dispatch('check/changeQuantity', [ item, changing ])      
     },
-    addCustomerToForm(customer) {
-      let clone = {}
-      this.customer = Object.assign(clone, customer)
-      this.dialogAddCustomer = false
-    },
+    
     printCheck(paymentType) {
       console.log("222")
       this.paymentType = paymentType
@@ -813,12 +684,10 @@ export default {
     },
     barcodeInputFocus() {
       let app = this
-      //не грамотно работает, нужно поймать уничтоение компонента
       setTimeout(function() { app.$refs.barcodeInput.focus() }, 1)
     },
     getFromCustomerFocus() {
       let app = this
-      //не грамотно работает, нужно поймать уничтоение компонента
       setTimeout(function() { app.$refs.getFromCustomerInput.focus() }, 1)
     },
     toPayment() {
@@ -826,19 +695,16 @@ export default {
         return
       }
       this.dialogPayment = true;
-      //не грамотно работает, нужно поймать уничтоение компонента
       let app = this
       setTimeout(function() { app.$refs.getFromCustomerInput.focus() }, 1)
     },
     toScanDatamatrix() {
       this.dialogScanDatamatrix = true;
-      //не грамотно работает, нужно поймать уничтоение компонента
       let app = this
       setTimeout(function() { app.$refs.datamatrixInput.focus() }, 1)
     },
     toConfirmCashless() {
       this.dialogConfirmСashless = true;
-      //не грамотно работает, нужно поймать уничтоение компонента
       let app = this
       setTimeout(function() { app.$refs.dialogConfirmCashlessDiv.focus() }, 1)
     },
@@ -846,54 +712,40 @@ export default {
       let app = this 
       if (this.inputCode == "") {
           this.quantityOfSelectedItem = this.items[this.activeItem].quantity
-          this.paymentMethodOfSelectedItem = this.items[this.activeItem].paymentMethod
-        //не грамотно работает, нужно поймать уничтоение компонента
         this.dialogItemChanging = true;
         setTimeout(function() { app.$refs.itemQuantity.focus() }, 1)
       }
     },
     changeItem() {
        if (this.quantity > 0) {
-        this.$store.dispatch('check/setQuantity', [ this.activeItem, this.quantity ])
-        
-        
+        this.$store.dispatch('check/setQuantity', [ this.activeItem, this.quantity ])    
       }   
-      this.$store.commit('check/setPaymentMethod', [ this.activeItem, this.paymentMethodOfSelectedItem ])
       this.closeDialogItemChanging()   
-    },
-    saveCheckSettings() {
-      this.dialogCheckSettings = false
     },
     closeDialogPayment() {
       this.dialogPayment = false
       this.getFromCustomer = ""
-      //не грамотно работает, нужно поймать уничтоение компонента
       let app = this
       setTimeout(function() { app.$refs.barcodeInput.focus() }, 1)
     },
     closeDialogScanDatamatrix() {
       this.dialogScanDatamatrix = false
       this.datamatrixInput = ""
-      //не грамотно работает, нужно поймать уничтоение компонента
       let app = this
       setTimeout(function() { app.$refs.barcodeInput.focus() }, 1)
     },
     closeDialogScanDatamatrixFromComPort() {
       this.dialogScanDatamatrixFromComPort = false
-      //не грамотно работает, нужно поймать уничтоение компонента
       let app = this
       setTimeout(function() { app.$refs.barcodeInput.focus() }, 1)
     },
     closeDialogConfirmСashless() {
       this.dialogConfirmСashless = false
-      //не грамотно работает, нужно поймать уничтоение компонента
       let app = this
       setTimeout(function() { app.$refs.getFromCustomerInput.focus() }, 1)
     },
     closeDialogItemChanging() {
       this.dialogItemChanging = false
-      
-      //не грамотно работает, нужно поймать уничтоение компонента
       let app = this
       setTimeout(function() { app.$refs.barcodeInput.focus() }, 1)
       this.quantity = ""

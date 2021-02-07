@@ -1,5 +1,5 @@
 <template>
-<v-card height="90vh">
+<v-card min-height="90vh">
     <v-card-title>
       
       <v-text-field
@@ -31,7 +31,7 @@
     <v-data-table
     :headers="headers"
     :items="folders"
-    item-key="title"
+    item-key="_id"
     color="primary lighten-4"
     class="elevation-1"
     @click:row="goToFolder"
@@ -47,7 +47,7 @@
 v-if="!search.length"
     :headers="headers"
     :items="items"
-    item-key="title"
+     item-key="_id"
     class="elevation-1"
     @click:row="selectItem"
     hide-default-footer
@@ -57,7 +57,7 @@ v-if="!search.length"
   v-if="search.length"
     :headers="headers"
     :items="allItems"
-    item-key="name"
+    item-key="_id"
     class="elevation-1"
     :search="search"
     @click:row="selectItem"

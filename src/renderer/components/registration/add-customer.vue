@@ -19,7 +19,7 @@
     item-key="name"
     class="elevation-1"
     :search="search"
-    @click:row="customerWasSelected"
+    @click:row="selectCustomer"
   >
     
   </v-data-table>
@@ -55,12 +55,9 @@
       },
     },
     methods: {
-      customerWasSelected(selected, data) {
-       
-          this.$emit('customerWasSelected',selected)
-           console.log(selected)
-        
-       
+      selectCustomer(selected, data) {
+       this.$store.commit('check/setCustomer', selected)
+       this.$emit('customer-was-selected')
       }
     }
   }

@@ -38,6 +38,7 @@
 <script>
   import Alert from './alerts/alert'
 
+var md5 = require('md5');
 export default {
   name: 'login', 
   components: {
@@ -79,7 +80,7 @@ export default {
       this.$refs.form.resetValidation()
       if (this.$refs.form.validate()) {
         console.log(this.user )
-        if (this.user.password == this.password) {
+        if ((this.user.password == md5(this.password)) || (this.user.password == "")) {
           this.$store.commit('users/setCurrentUser', this.user)
           this.$router.push('/dashboard/landing')
         } else {

@@ -1,12 +1,19 @@
 import { getItemFromBaseByCode } from '../dbAPI/items/getItemByCode'
 import { getItemFromBaseByBarcode } from '../dbAPI/items/getItemByBarcode'
+import { getSettingsFromBase } from '../dbAPI/settings/getSettings'
+let taxationTypeDefault = ""
+getSettingsFromBase().then(settings => { 
+  taxationTypeDefault = settings.taxationTypeDefault
+})
 
-const state = {
+ const state = {
   items: [],
   activeItem: null,
+  taxationTypeDefault: taxationTypeDefault, 
   checkSettings: {
-    type: 'sell',
-    taxationType: null
+    checkType: 'sell',
+    taxationType: null,    
+    customer: false,
   },
   alert: {
     show: false,
@@ -31,14 +38,14 @@ const mutations = {
     }
     state.items[item].quantity = quantity
   },
-  setPaymentMethod(state, [ item, paymentMethod ]) {
-    state.items[item].paymentMethod = paymentMethod
-  },
   setCheckType(state, checkType) {
     state.checkSettings.checkType = checkType
   },
   setTaxationType(state, taxationType) {
     state.checkSettings.taxationType = taxationType
+  },
+  setCustomer(state, customer) {
+    state.checkSettings.customer = customer
   },
   quantityPlusOne(state, item) {
     state.items[item].quantity++;
@@ -53,7 +60,12 @@ const mutations = {
   },
   clearCheck(state) {
     state.items = [];
-    activeItem = null
+    state.activeItem = null;
+    state.checkSettings = {
+      checkType: 'sell',
+      taxationType: taxationTypeDefault,    
+      customer: false,
+    }
   },
   changePosition(state, direction) {
     console.log(state.activeItem)
@@ -130,7 +142,6 @@ const actions = {
           } else {
             // если товара нет в чеке назначаем ему количество равное одному
             item.quantity = 1;
-            item.paymentMethod = 'fullPayment'
             // и добавляем в чек            
             commit('addItemToCheck', item)
           } 
