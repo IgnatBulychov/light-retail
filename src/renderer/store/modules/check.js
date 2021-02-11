@@ -51,6 +51,10 @@ const mutations = {
     state.items[item].quantity++;
     state.activeItem = item
   },
+  quantityPlusFloat(state, [ item, quantity ]) {
+    state.items[item].quantity = state.items[item].quantity + quantity;
+    state.activeItem = item
+  },
   quantityMinusOne(state, item) {
     if (state.items[item].quantity == 1) {
       return
@@ -89,6 +93,16 @@ const mutations = {
 }
 
 const actions = {
+  addItemtoCheck({ commit, state }, item) {
+    // проверяем есть ли в чеке такой же товар
+    let copy = state.items.find(itemInCheck => itemInCheck._id == item._id)
+    if (copy) { 
+      //найдем индекс этого товара и отправим его в коммит добавления количества
+      commit('quantityPlusFloat', [ state.items.indexOf(copy), item.quantity ])  
+    } else {
+      commit('addItemToCheck', item)
+    }
+  },
   getItemByBarcode({ commit, state }, barcode) {
     return new Promise((resolve, reject) => {
       
@@ -120,20 +134,6 @@ const actions = {
               text: 'Ничего не найдено'
             })
             return
-          }
-
-          // если это первый товар добавленный в чек устанавливаем СНО для всего чека
-          if (state.items.length == 0) {
-            commit('setTaxationType', item.taxationType)
-          } else if (item.taxationType != state.checkSettings.taxationType) {
-            // если это не первый товар, узнаем нет ли конфликта СНО
-            commit('setAlert', {
-              show: true,
-              type: "error",
-              timeout: 5000,
-              text: 'В чек нельзя добавлять товары с разными СНО'
-            })
-            return;
           }
 
           // если маркированый ждем коммит от компонента регистрации, если успешно отсканирован код
@@ -183,19 +183,6 @@ const actions = {
             return
           }
 
-          // если это первый товар добавленный в чек устанавливаем СНО для всего чека
-          if (state.items.length == 0) {
-            commit('setTaxationType', item.taxationType)
-          } else if (item.taxationType != state.checkSettings.taxationType) {
-            // если это не первый товар, узнаем нет ли конфликта СНО
-            commit('setAlert', {
-              show: true,
-              type: "error",
-              timeout: 5000,
-              text: 'В чек нельзя добавлять товары с разными СНО'
-            })
-            return;
-          }
 
           if (item.mark) {
             resolve(item)
@@ -209,9 +196,6 @@ const actions = {
       }
 
     })
-  },
-  getItemByBarcodeWithoutScan({ commit, state }, code) {
-
   },
   setQuantity({ commit }, [ item, quantity ]) {
     commit('setQuantity', [ item, quantity ] )

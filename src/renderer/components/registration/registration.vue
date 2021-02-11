@@ -1,26 +1,13 @@
 <template>
-  <div @click="$refs.barcodeInput.focus()"  color="grey lighten-2" class="registration-block">
+  <div @click="$store.commit('itemAdditionManager/barcodeInputFocus')"  color="grey lighten-2" class="registration-block">
 
-    <item-finder />
+   
+<item-finder @to-payment="toPayment"/>
 
-    <div class="py-1 px-2 code-input">
-      <v-form @submit.prevent="(inputCode == '') ? toPayment() : addItem() ">
-        <v-text-field
-          ref="barcodeInput"
-          append-icon="mdi-barcode-scan"
-          @click:append="addItem()"
-          color="green"
-          placeholder="Отсканируйте или введите код" 
-          solo
-          v-model="inputCode"
-          v-on:keyup.38="changePosition('up')"
-          v-on:keyup.40="changePosition('down')"
-          @keyup.46="removeItem(activeItem)"
-          @keyup.106="inputCode = inputCode.replace(/\*/g, ''); if (!items[activeItem].mark) toItemChanging()"
-        ></v-text-field>
-        <v-btn class="d-none" type="submit">Submit</v-btn>
-      </v-form>
-    </div>
+<new-item-float-or-int />
+
+<set-mark />
+
 
     <div class="check-items"  height="80%">
       <v-container fluid v-if="items.length">
@@ -337,81 +324,10 @@
       </div>
     </v-dialog>
 
-    <!-- диалог изменения позиции -->
+  
 
-    <v-dialog eager 
-      @keydown.esc="closeDialogScanDatamatrix()"
-      max-width="50%"
-      v-model="dialogScanDatamatrix"  
-      v-on:click:outside="closeDialogScanDatamatrix" 
-    >
-    <div @click.prevent="$refs.datamatrixInput.focus()">
-    <v-card>
-      <v-card-title>
-        <span class="text-lg-h6">
-          Код маркировки
-        </span>
-        <v-spacer></v-spacer>
-          <v-btn icon @click="closeDialogScanDatamatrix()">
-            <v-icon>mdi-close</v-icon>
-          </v-btn>
-        </v-card-title>
-        <v-card-text>
-          <v-text-field
-            ref="datamatrixInput"
-            placeholder="Отсканируйте код маркировки"
-            color="green"
-            :append-icon="mdiDataMatrixScan"
-            v-model="datamatrixCode"
-            v-on:keyup.enter="addKTN()"
-            :rules="[]"
-          ></v-text-field>        
-        </v-card-text>
-        <v-card-actions>    
-           <v-spacer></v-spacer>
-      
-          <v-btn @click="addKTN()" width="40%" height="50px" dark color="green lighten-2">
-              <v-chip class="ma-2" color="gray" label dark text-color="white">
-                <v-icon> mdi-keyboard </v-icon> Enter
-              </v-chip> Ок        
-            </v-btn>
-             <v-spacer></v-spacer>          
-        </v-card-actions>
-      </v-card>
-      </div>
-    </v-dialog>
 
-<!-- диалог скан датаматрикс из ком порта -->
-    <v-dialog eager 
-      @keydown.esc="closeDialogScanDatamatrixFromComPort()"
-      max-width="50%"
-      v-model="dialogScanDatamatrixFromComPort"  
-      v-on:click:outside="closeDialogScanDatamatrixFromComPort()" 
-    >
-    <div>
-    <v-card>
-      <v-card-title>
-        <span class="text-lg-h6">
-          Код маркировки
-        </span>
-        <v-spacer></v-spacer>
-          <v-btn icon @click="closeDialogScanDatamatrixFromComPort()">
-            <v-icon>mdi-close</v-icon>
-          </v-btn>
-        </v-card-title>
-        <v-card-text>
-          <v-text-field
-            placeholder="Отсканируйте код маркировки"
-            color="green"
-            :append-icon="mdiDataMatrixScan"
-            :rules="[]"
-          ></v-text-field>        
-        </v-card-text>
-        <v-card-actions>             
-        </v-card-actions>
-      </v-card>
-      </div>
-    </v-dialog>
+
 
     <!-- диалог настроек чека -->
 
@@ -427,19 +343,12 @@
     </v-dialog>
 
 
-    <scanner-com-port 
-      @scan-data-matrix="scanFromComPortDataMatrix" 
-      @scan-ean13="scanFromComPortEan13"
-    />
-
     <fiscal-printer 
       @checkPrinted="checkWasPrinted" 
       :print="print" 
       :summ="summ" 
       :paymentType="paymentType" 
       :getFromCustomer="getFromCustomer" 
-    
-  
     />
 
     <alert :alert="alert"/>
@@ -447,25 +356,26 @@
 </template>
 
 <script>
-import { mdiDataMatrixScan } from '@mdi/js'
 import { mdiDataMatrix } from '@mdi/js'
-import { convertKTN } from './../functions/convertKTN'
 import FiscalPrinter from './../equipment/fiscal-printer'
-import ScannerComPort from './../equipment/scanner-com-port'
 import AddItemFromBase from './add-item-from-base'
+
+import ItemFinder from './item-finder'
+import NewItemFloatOrInt from './new-item-float-or-int'
+import SetMark from './set-mark'
 
 import Alert from '../alerts/alert'
 import CheckSettings from './check-settings.vue'
 export default {
   name: 'registration',
   components: {
-    AddItemFromBase, Alert, ScannerComPort, FiscalPrinter, CheckSettings
+    AddItemFromBase, Alert, FiscalPrinter, CheckSettings, 
+    ItemFinder, NewItemFloatOrInt, SetMark
   },
   data() {
     return {
-      mdiDataMatrixScan,
       mdiDataMatrix,
-      inputCode: "",
+    
       dialogAddItemFromBase: false,
       dialogPayment: false,
       dialogItemChanging: false,
@@ -489,14 +399,10 @@ export default {
       }
     }
   },
-  destroyed() {
-    console.log('registration destroed')
-      fptr.close()
-      fptr.destroy()
-    },
+
   mounted () {
     this.$store.commit('settings/getSettings')
-    this.$refs.barcodeInput.focus()   
+    this.$store.commit('itemAdditionManager/setLiveStep', "init")
   },
   watch: {
     '$store.state.check.alert': function () {
@@ -550,113 +456,15 @@ export default {
     }*/
   },
   methods: {
-    scanFromComPortEan13(code) {
-      console.log('eeee', code)
-        let app = this
-        app.$store.dispatch('check/getItemByBarcode', code).then(item => {
-            // если поиск вернет маркированный товар то срабоате then промиса         
-            
-            app.dialogScanDatamatrixFromComPort = true;
-            app.currentMarkItem = item
-          })
-
-    },
-    scanFromComPortDataMatrix(code) {
-      
-      console.log('eeee', code)
-      let app = this
-      if (this.dialogScanDatamatrixFromComPort) {
-        app.datamatrixCode = code
-        app.addKTN()
-        app.dialogScanDatamatrixFromComPort = false
-        
-      } else  {
-        console.log('дата матрикс сразу')
-        app.datamatrixCode = code
-        let ean13 = Number(code.slice(3, 16))
-        app.$store.dispatch('check/getItemByBarcode', ean13).then(item => {
-          app.currentMarkItem = item
-            // если поиск вернет маркированный товар то срабоате then промиса        
-            app.addKTN()
-          })
-      }
-    },
-    addItem () {
-      let app = this
-      if (app.inputCode !== "") {
-        if  (app.inputCode.length < 8){
-          // если ean13
-          app.$store.dispatch('check/getItemByBarcode', app.inputCode).then(item => {
-            // если поиск вернет маркированный товар           
-            app.toScanDatamatrix()
-            app.currentMarkItem = item
-          })
-        } else if (app.inputCode.length < 14)  {
-          // если внутренний код
-          app.$store.dispatch('check/getItemByCode', app.inputCode).then(item => {
-            // если поиск вернет маркированный товар           
-            app.toScanDatamatrix()
-            app.currentMarkItem = item
-          })
-        } else if (app.inputCode.length > 13) {
-          // если код маркировки
-          if (app.inputCode.length == 29) {
-            // если DataMatrix (пункт 7 инструкции ЧЗ)
-            app.$store.dispatch('check/getItemByBarcodeWithoutScan', app.inputCode)
-
-
-          } else {            
-            // если DataMatrix GS1 (пункт 6 инструкции ЧЗ)
-            convertKTN(app.inputCode).then(result => {
-              app.$store.dispatch('check/getItemByBarcodeWithoutScan', app.inputCode)
-              .then(result => {
-                   
-                   
-              })
-              .catch(err => {
-               
-                
-              })
-            })
-            .catch(err => {
-              app.alert = err
-            })
-          }
-        }    
-      }
-      app.inputCode = ""
-    },
-    addKTN() {
-      let app = this
-      console.log('!!!')
-      convertKTN(app.datamatrixCode).then(result => {        
-        app.currentMarkItem.quantity = 1    
-        app.currentMarkItem.gtin = result.gtin
-        app.currentMarkItem.serial = result.serial
-        app.currentMarkItem.ean13 = result.ean13
-        app.currentMarkItem.nomenclatureCode = result.nomenclatureCode
-        app.$store.commit('check/addItemToCheck', app.currentMarkItem)      
-        app.currentMarkItem = null
-        app.datamatrixCode = ""
-        app.closeDialogScanDatamatrix()
-      })
-      .catch(err => {
-        app.currentMarkItem = null
-        app.datamatrixCode = ""
-        app.alert = err
-        app.closeDialogScanDatamatrix()
-      })
-      
-    },
+    
+ 
     removeItem(item) {
       this.$store.dispatch('check/removeItem', item)
     },
     clearCheck() {
       this.$store.commit('check/clearCheck')
     },
-    changePosition (to) {
-      this.$store.dispatch('check/changePosition', to)
-    },
+    
     changeQuantity(item, changing) {
       this.$store.dispatch('check/changeQuantity', [ item, changing ])      
     },

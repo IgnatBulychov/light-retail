@@ -68,7 +68,9 @@ export default {
         this.socket.on('MESSAGE', (data) => {
             console.log(data)
              console.log("ну строка ПРИШЛА", data)
-            if (data.length < 15) {
+            if (data.length == 9) {
+               app.$emit('scan-ean8', data)
+            } else if (data.length == 14) {
                app.$emit('scan-ean13', data)
             } else if (data.length > 14) {
               app.$emit('scan-data-matrix', data)

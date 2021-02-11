@@ -13,8 +13,11 @@ export const getItemFromBaseByBarcode = function(inputCode) {
       db.findOne({ barcodes: Number(inputCode) }, function (err, item) { 
         if (err) {
           reject(err) 
-        }      
+        }   
         if (item) {
+          console.log('!44!!',item)
+        resolve(item)   
+      /*  
           if (item.parent == "root") {
             getSettingsFromBase().then((settings) => {
               item.taxationType = settings.taxationTypeDefault
@@ -29,11 +32,11 @@ export const getItemFromBaseByBarcode = function(inputCode) {
               } else {
                 getSettingsFromBase().then((settings) => {
                   item.taxationType = settings.taxationTypeDefault
-                  resolve(item)
+                 
                 })
               }              
             }) 
-          }                   
+          }   */                
         } else {
           resolve(null)
         }   

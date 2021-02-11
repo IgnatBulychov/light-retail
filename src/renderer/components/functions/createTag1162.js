@@ -1,4 +1,4 @@
-export const convertKTN = async function (code) {
+export const createTag1162 = async function (code) {
     let promise = new Promise((resolve, reject) => {
         // example 
         // 010290001900263821DrdLwa!?8HaP9
