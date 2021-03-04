@@ -2,15 +2,15 @@
   <div @click="$store.commit('itemAdditionManager/barcodeInputFocus')"  color="grey lighten-2" class="registration-block">
 
    
-<item-finder @to-payment="toPayment"/>
+<item-finder @to-payment="toPayment" @toItemChanging="toItemChanging()"/>
 
 <new-item-float-or-int />
 
 <set-mark />
 
 
-    <div class="check-items"  height="80%">
-      <v-container fluid v-if="items.length">
+    <div class="check-items" >
+      <v-container  class="check-items" fluid v-if="items.length">
         <v-row class="text-center">
           <v-col cols="3" class="text-left">
             Наименование
@@ -97,8 +97,8 @@
 
 
     <div class="footer-bar" >
-      <v-toolbar dark color="green lighten-5">    
-        <v-toolbar-items>
+      <v-toolbar dark color="green lighten-5" class="tool-bar-custom">    
+        <v-toolbar-items >
 
           <v-tooltip top>
             <template v-slot:activator="{ on, attrs }">
@@ -131,7 +131,7 @@
             v-model="dialogAddItemFromBase"
             width="90%"
           >
-            <add-item-from-base></add-item-from-base>
+            <add-item-from-base @item-selected="itemSelected"></add-item-from-base>
           </v-dialog>
 
         </v-toolbar-items>
@@ -236,6 +236,11 @@
             </v-chip>
             <v-icon>mdi-credit-card-outline</v-icon> Банковской картой
           </v-btn>
+          <div>
+            <v-card-actions>
+            Другие способы оплаты
+            </v-card-actions>
+          </div>
         </v-card-actions>
       </v-card>
        <!-- диалог подтверждения безналичного расчета -->
@@ -305,14 +310,13 @@
             label="Количество"
             v-model="quantity"
             :rules="quantityRules"
-             v-on:keyup.enter="changeItem()"
           ></v-text-field>   
       
         </v-card-text>
         <v-card-actions>    
            <v-spacer></v-spacer>
       
-          <v-btn type="submit" width="40%" height="50px" dark color="green lighten-2">
+          <v-btn type="submit" @click="changeItem()" width="40%" height="50px" dark color="green lighten-2">
               <v-chip class="ma-2" color="gray" label dark text-color="white">
                 <v-icon> mdi-keyboard </v-icon> Enter
               </v-chip> Ок        
@@ -374,8 +378,7 @@ export default {
   },
   data() {
     return {
-      mdiDataMatrix,
-    
+      mdiDataMatrix,    
       dialogAddItemFromBase: false,
       dialogPayment: false,
       dialogItemChanging: false,
@@ -399,10 +402,11 @@ export default {
       }
     }
   },
-
   mounted () {
+    this.$store.dispatch('check/getCheckSettings')
     this.$store.commit('settings/getSettings')
-    this.$store.commit('itemAdditionManager/setLiveStep', "init")
+    this.$store.commit('itemAdditionManager/init')
+    this.barcodeInputFocus()
   },
   watch: {
     '$store.state.check.alert': function () {
@@ -413,8 +417,13 @@ export default {
     }
   },
   computed: {   
-    activeItem() {
-      return this.$store.state.check.activeItem
+    activeItem: {
+      get() {
+        return this.$store.state.check.activeItem
+      },
+      set(v) {
+        this.$store.commit('check/setActiveItem', v)
+      }
     },  
     summ() {
       let summ = 0;
@@ -456,26 +465,21 @@ export default {
     }*/
   },
   methods: {
-    
- 
     removeItem(item) {
       this.$store.dispatch('check/removeItem', item)
     },
     clearCheck() {
       this.$store.commit('check/clearCheck')
     },
-    
     changeQuantity(item, changing) {
       this.$store.dispatch('check/changeQuantity', [ item, changing ])      
     },
-    
     printCheck(paymentType) {
-      console.log("222")
+      console.log("Registration: print check")
       this.paymentType = paymentType
       this.print = true
       this.dialogConfirmСashless = false       
       this.dialogPayment = false
-
     },
     checkWasPrinted(result) {
       this.alert = result
@@ -488,11 +492,10 @@ export default {
         this.print = false
         this.barcodeInputFocus()
       }
-        
     },
     barcodeInputFocus() {
       let app = this
-      setTimeout(function() { app.$refs.barcodeInput.focus() }, 1)
+      setTimeout(function() { app.$store.commit('itemAdditionManager/barcodeInputFocus') }, 1)
     },
     getFromCustomerFocus() {
       let app = this
@@ -518,11 +521,9 @@ export default {
     },
     toItemChanging() {
       let app = this 
-      if (this.inputCode == "") {
-          this.quantityOfSelectedItem = this.items[this.activeItem].quantity
-        this.dialogItemChanging = true;
-        setTimeout(function() { app.$refs.itemQuantity.focus() }, 1)
-      }
+      this.quantityOfSelectedItem = this.items[this.activeItem].quantity
+      this.dialogItemChanging = true;
+      setTimeout(function() { app.$refs.itemQuantity.focus() }, 1)
     },
     changeItem() {
        if (this.quantity > 0) {
@@ -530,22 +531,27 @@ export default {
       }   
       this.closeDialogItemChanging()   
     },
+    itemSelected() {
+      this.dialogAddItemFromBase = false
+      let app = this
+      setTimeout(function() { app.$store.commit('itemAdditionManager/barcodeInputFocus') }, 1)
+    },
     closeDialogPayment() {
       this.dialogPayment = false
       this.getFromCustomer = ""
       let app = this
-      setTimeout(function() { app.$refs.barcodeInput.focus() }, 1)
+      setTimeout(function() { app.$store.commit('itemAdditionManager/barcodeInputFocus') }, 1)
     },
     closeDialogScanDatamatrix() {
       this.dialogScanDatamatrix = false
       this.datamatrixInput = ""
       let app = this
-      setTimeout(function() { app.$refs.barcodeInput.focus() }, 1)
+      setTimeout(function() { app.$store.commit('itemAdditionManager/barcodeInputFocus') }, 1)
     },
     closeDialogScanDatamatrixFromComPort() {
       this.dialogScanDatamatrixFromComPort = false
       let app = this
-      setTimeout(function() { app.$refs.barcodeInput.focus() }, 1)
+      setTimeout(function() { app.$store.commit('itemAdditionManager/barcodeInputFocus') }, 1)
     },
     closeDialogConfirmСashless() {
       this.dialogConfirmСashless = false
@@ -555,7 +561,7 @@ export default {
     closeDialogItemChanging() {
       this.dialogItemChanging = false
       let app = this
-      setTimeout(function() { app.$refs.barcodeInput.focus() }, 1)
+      setTimeout(function() { app.$store.commit('itemAdditionManager/barcodeInputFocus') }, 1)
       this.quantity = ""
     }
   }
@@ -565,10 +571,9 @@ export default {
 <style scoped>
 .registration-block {
   height: 100vh;
+  padding: 0;
 }
-.code-input {
-  height: 10%;
-}
+
 .check-items {
   height: 80%;
   overflow: auto
@@ -576,6 +581,9 @@ export default {
 .footer-bar {
   height: 10%;
 } 
+.tool-bar-custom {
+height: 100%;
+}
 </style>
 
 

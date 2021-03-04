@@ -5,10 +5,8 @@
       <v-text-field
         v-model="search"
         append-icon="search-mdi"
-        label="Поиск по названию, артикулу или цене"
-        placeholder="Поиск по названию, артикулу или цене"
-        single-line
-        hide-details
+        label="Поиск по названию или артикулу"
+        placeholder="Поиск по названию или артикулу"
       ></v-text-field>
     </v-card-title>
         <v-card-text>
@@ -35,6 +33,8 @@
     color="primary lighten-4"
     class="elevation-1"
     @click:row="goToFolder"
+    :items-per-page="8"
+    disable-pagination
     hide-default-header
     hide-default-footer
   >
@@ -42,41 +42,41 @@
   </v-data-table>
      </v-col>
       <v-col cols=12 :md="search.length ? 12 : 6">
-Товары:
-<v-data-table
-v-if="!search.length"
-    :headers="headers"
-    :items="items"
-     item-key="_id"
-    class="elevation-1"
-    @click:row="selectItem"
-    hide-default-footer
-  ></v-data-table>
+      Товары:
+      <v-data-table
+      v-if="!search.length"
+          :headers="headers"
+          :items="items"
+          item-key="_id"
+          class="elevation-1"
+          @click:row="selectItem"
+          :items-per-page="8"
+        ></v-data-table>
 
-  <v-data-table
-  v-if="search.length"
-    :headers="headers"
-    :items="allItems"
-    item-key="_id"
-    class="elevation-1"
-    :search="search"
-    @click:row="selectItem"
-    hide-default-footer
-  >
-    
-  </v-data-table>
-</v-col>
-          </v-row>
-        </v-card-text>
-
+        <v-data-table
+        v-if="search.length"
+          :headers="headers"
+          :items="foundItems"
+          item-key="_id"
+          :items-per-page="8"
+          class="elevation-1"
+          @click:row="selectItem"
+        >
+          
+        </v-data-table>
+      </v-col>
+    </v-row>
+  </v-card-text>
   </v-card>
 </template>
 
 <script>
 import { findFolderParent } from '../../store/dbAPI/items/findFolderParent'
+import { getFolderByID } from '../../store/dbAPI/items/getFolderByID';
+import { getAgencySchemeFromBase } from '../../store/dbAPI/agencySchemes/getAgencyScheme';
+import { getSupplierFromBase } from '../../store/dbAPI/suppliers/getSupplier';
  export default {
     name: 'add-item-from-base',
-
     data() {
       return {
          search: '',
@@ -98,7 +98,7 @@ import { findFolderParent } from '../../store/dbAPI/items/findFolderParent'
       }
     },
     mounted() {
-      this.$store.dispatch('items/getAllItems')
+     // this.$store.dispatch('items/getAllItems')
       this.$store.dispatch('items/getItems', this.$route.query.folder)
       this.$store.dispatch('items/getFolders', this.$route.query.folder)
     },
@@ -109,21 +109,55 @@ import { findFolderParent } from '../../store/dbAPI/items/findFolderParent'
           this.$store.dispatch('items/getItems', this.$route.query.folder)
        
         },
+        'search': function() {
+           this.$store.dispatch('items/getItemsBySearch', this.search)
+        }
     },
     computed: {
       items() {
         return this.$store.state.items.items;
       },
-      allItems() {
-        return this.$store.state.items.allItems;
+      foundItems() {
+        return this.$store.state.items.foundItems;
       },
       folders() {
         return this.$store.state.items.folders
       },
     },
     methods: {
-      selectItem(){
+      selectItem(item, data){
+        let app = this
+        
+        async function buildItem(item) {
 
+            let taxationType = null
+            let agencyScheme = null
+
+            if (item.parent != "root") {               
+              let parent = await getFolderByID(item)
+              taxationType = parent.taxationType
+            }
+
+            if (item.agencyScheme) {
+              let agencySchemeFromBase = await getAgencySchemeFromBase(item.agencyScheme)
+              let supplierFromBase = await getSupplierFromBase(agencySchemeFromBase.supplier)
+              console.log(agencySchemeFromBase)
+              agencyScheme = agencySchemeFromBase
+              agencyScheme.supplier = supplierFromBase
+            }
+
+            item.taxationType = taxationType
+            item.agencyScheme = agencyScheme
+            return item
+        }  
+
+        buildItem(item)
+        .then(item => {   
+          app.$store.commit('itemAdditionManager/setItem', item)
+          app.$emit('item-selected') 
+        })
+                  
+       
       },
       goToFolder(folder) {
         this.$router.push({

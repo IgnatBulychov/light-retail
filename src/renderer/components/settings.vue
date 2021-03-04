@@ -95,16 +95,13 @@
                 <v-col cols="1">
                   #
                 </v-col>
-                <v-col cols="3">
+                <v-col cols="4">
                   Имя
                 </v-col>
                 <v-col cols="3">
                   Роль
                 </v-col>
-                <v-col cols="3">
-                  Пароль
-                </v-col>
-                <v-col cols="2">
+                <v-col cols="4">
                   Действия
                 </v-col>
               </v-row>
@@ -112,16 +109,13 @@
                 <v-col cols="1">
                   {{ key + 1 }}
                 </v-col>
-                <v-col cols="3">
+                <v-col cols="4">
                   {{ user.name }}
                 </v-col>
                 <v-col cols="3">
                   {{ user.role == 'admin' ? "Адмиистратор" : "Кассир" }}
                 </v-col>
-                <v-col cols="3">
-                  {{ user.password ? user.password : 'Не задан' }}
-                </v-col>
-                <v-col cols="2"> 
+                <v-col cols="4"> 
                   <v-tooltip bottom>
                     <template v-slot:activator="{ on, attrs }">
                       <v-btn v-bind="attrs" v-on="on" icon @click="userForUpdate = Object.assign({}, user); dialogUpdateUser = true">  

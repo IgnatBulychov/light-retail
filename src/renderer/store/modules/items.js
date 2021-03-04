@@ -1,5 +1,6 @@
 import { getAllItemsFromBase } from '../dbAPI/items/getAllItems'
 import { getItemsFromBase } from '../dbAPI/items/getItems'
+import { getItemsBySearchFromBase } from '../dbAPI/items/getItemsBySearch'
 import { findFolderItems } from '../dbAPI/items/findFolderItems'
 import { createItemInBase } from '../dbAPI/items/createItem'
 import { updateItemInBase } from '../dbAPI/items/updateItem'
@@ -14,7 +15,8 @@ import { removeFoldersFromBase } from '../dbAPI/items/removeFolders'
 
 const state = {
   items: [],
-  allItems: [],
+ // allItems: [],
+  foundItems: [],
   folders: [],
   currentFolder: null,
   alert: {
@@ -35,8 +37,11 @@ const mutations = {
   setItems (state, items) {
     state.items = items
   },
-  setAllItems (state, items) {
+ /* setAllItems (state, items) {
     state.allItems = items
+  },*/
+  setFoundItems(state, items) {
+    state.foundItems = items
   },
   setFolders (state, folders) {
     state.folders = folders
@@ -52,9 +57,16 @@ const actions = {
       commit('setItems', items)
     });
   }, 
-  getAllItems ({ commit }) {
+ /* getAllItems ({ commit }) {
     getAllItemsFromBase().then(items => {
       commit('setAllItems', items)
+    });
+  },  */
+  getItemsBySearch ({ commit }, search) {
+    console.log('query', search)
+    getItemsBySearchFromBase(search).then(items => {
+      console.log('query', items)
+      commit('setFoundItems', items)
     });
   },  
   createItem ({ commit, dispatch }, item) {

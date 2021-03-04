@@ -4,18 +4,20 @@ const application = remote.app
 var Datastore = require('nedb')
 var db = new Datastore({ filename: `${application.getPath('userData')}/base/items.db`})
 
-export const getItemFromBaseByBarcode = function(inputCode) {
+export const getItemsBySearchFromBase = function(searchQuery) {
   return new Promise(function(resolve, reject){  
     db.loadDatabase(function (err) { 
-      db.findOne({ barcodes: Number(inputCode) }, function (err, item) { 
+      console.log('query', searchQuery)
+      let regex = new RegExp(searchQuery, 'i');
+      db.find({ $or: [{ title: { $regex: regex } }, { vendorCode: Number(searchQuery)  }] }, function (err, items) { 
         if (err) {
           reject(err) 
         }   
-        if (item) {    
-          resolve(item)        
+        if (items.length) {    
+          resolve(items)
         } else {
           resolve(null)
-        }   
+        } 
       });
     }); 
   })

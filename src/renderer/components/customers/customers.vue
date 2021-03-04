@@ -43,7 +43,7 @@
             <v-col cols="1">
               #
             </v-col>
-            <v-col cols="4">
+            <v-col cols="3">
               Имя/Название
             </v-col>
             <v-col cols="2">
@@ -55,7 +55,7 @@
             <v-col cols="2">
               ИНН
             </v-col>
-            <v-col cols="1">
+            <v-col cols="2">
               Действия
             </v-col>
           </v-row>
@@ -63,7 +63,7 @@
             <v-col cols="1">
               <div class="py-5"> {{ key + 1 }} </div>
             </v-col>
-            <v-col cols="4">                   
+            <v-col cols="3">                   
               <div class="py-5"> {{ customer.name }} </div>
             </v-col>
             <v-col cols="2"> 
@@ -75,7 +75,7 @@
             <v-col cols="2"> 
               <div class="py-5"> {{ customer.vatin }} </div>
             </v-col>
-            <v-col cols="1">
+            <v-col cols="2">
               <div class="py-5">
                 <v-tooltip bottom>
                   <template v-slot:activator="{ on, attrs }">
@@ -116,7 +116,13 @@ export default {
     return {
       dialogCreateCustomer: false,
       dialogUpdateCustomer: false,
-      customerForUpdate: {}
+      customerForUpdate:  {
+          name: "",
+          vatin: "",
+          phone: "",
+          email: "",
+          status: 'individual'
+        }
     }
   }, 
   mounted() {

@@ -59,13 +59,6 @@ export default {
           value: "entity"
         }
       ],
-    /* customer: {
-        name: "",
-        vatin: "",
-        phone: "",
-        email: "",
-        status: 'individual'
-      },      */
       nameRules: [
         v => !!v || 'Название - обязательное поле'
       ]
@@ -73,7 +66,7 @@ export default {
   },
   computed: {
     emailRules() {
-      if (!this.customer.phone) {
+      if (!this.customerForUpdate.phone) {
         return [
           v => !!v || 'Заполните телефон или E-mail',
         ]
@@ -82,7 +75,7 @@ export default {
       }      
     },
     phoneRules () {
-      if (!this.customer.email) {
+      if (!this.customerForUpdate.email) {
         return [
           v => !!v || 'Заполните телефон или E-mail',
         ]
@@ -91,7 +84,7 @@ export default {
       }      
     },
     vatinRules() {
-      if (this.customer.vatin) {
+      if (this.customerForUpdate.vatin) {
         return [
           v => (v.length == 0 || v.length == 12) || 'Некорректный ИНН',
           v =>  /^\d+$/.test(v) || 'Некорректный ИНН'       
@@ -102,16 +95,9 @@ export default {
     } 
   },
   methods: {
-    updateUser() {
+    updateCustomer() {
       if (this.$refs.formUpdateCustomer.validate()) {
-        this.$store.dispatch('customers/updateCustomer', this.customer)
-         this.customer = {
-          name: "",
-          vatin: "",
-          phone: "",
-          email: "",
-          status: 'individual'
-        }
+        this.$store.dispatch('customers/updateCustomer', this.customerForUpdate)
         this.$refs.formUpdateCustomer.resetValidation()
         this.$emit('close-dialog')       
       }      

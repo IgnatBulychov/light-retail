@@ -1,5 +1,6 @@
 import { getEquipmentFromBase } from '../dbAPI/equipment/getEquipment'
 import { createEquipmentItemInBase } from '../dbAPI/equipment/createEquipmentItem'
+import { updateEquipmentItemInBase } from '../dbAPI/equipment/updateEquipmentItem'
 import { removeEquipmentItemFromBase } from '../dbAPI/equipment/removeEquipmentItem'
 
 const state = {
@@ -31,7 +32,7 @@ const getters = {
         fiscalPrinters.push(element)
       }
     });
-    return fiscalPrinters.find(equipment => equipment.active == true)
+    return fiscalPrinters.find(equipment => equipment.active == true) 
   }
 }
 
@@ -46,6 +47,12 @@ const actions = {
       dispatch('getEquipment')
     });
   },
+  updateEquipmentItem ({ commit, dispatch }, equipment) {
+    updateEquipmentItemInBase(equipment).then(id => {
+      dispatch('getEquipment')
+    });
+  },
+  
   removeEquipmentItem ({ commit, dispatch }, id) {
     removeEquipmentItemFromBase(id).then(id => {
       dispatch('getEquipment')

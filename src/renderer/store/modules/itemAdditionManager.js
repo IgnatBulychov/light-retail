@@ -19,6 +19,12 @@ const getters = {
 const mutations = {
   // при входе в режим регистрации или при закртии какого либо диалогового окна производиться мутация,
   // ее отслеживает комонент ItemFinder и фокусирует курсор на input для штрих кода
+  init(state) {
+    state.barcodeInputFocus = state.barcodeInputFocus ? false : true
+    state.item = null
+    state.liveStep = "init"
+    console.log('AdditionManagerInit')
+  },
   barcodeInputFocus(state) {
     state.barcodeInputFocus = state.barcodeInputFocus ? false : true
   },
@@ -36,12 +42,12 @@ const mutations = {
     state.liveStep = 'quantitySetting'
     console.log(state.liveStep)
   },
-  setNomenclatureCode(state, data) {
-    state.item.gtin = data.gtin
-    state.item.serial = data.serial
-    state.item.nomenclatureCode = data.nomenclatureCode
-    state.liveStep = 'init'
-    console.log(item)
+  setNomenclatureCode(state, [ gtin, serial, nomenclatureCode, raw ]) {
+    state.item.gtin = gtin
+    state.item.serial = serial
+    state.item.nomenclatureCode = nomenclatureCode
+    state.item.rawDatamatrix = raw
+    console.log('end Item')
   }
 }
 

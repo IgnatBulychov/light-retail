@@ -77,9 +77,20 @@
             label="Налоговая ставка"
             v-model="itemForUpdate.tax"
           ></v-select>
+
+          
+          <v-select
+            v-if="fineTuning"
+            :items="agencySchemes"
+            label="Агентская схема"
+            v-model="itemForUpdate.agencyScheme"
+          ></v-select>
+
+
           <v-btn class="success" @click="updateItem()">Изменить товар</v-btn>
         </v-card-text>
 
+        
           <scanner-com-port @scan-data-matrix="scanFromComPortDataMatrix" @scan-ean13="scanFromComPortEan13" />
 
       </v-card>
@@ -92,6 +103,7 @@ import taxes from '../resources/taxes.js'
 import itemTypesMinimal from '../resources/itemTypesMinimal.js'
 import itemTypes from '../resources/itemTypes.js'
 import paymentMethods from './../resources/paymentMethods'
+import agents from '../resources/agents.js'
 export default {
     name: 'update-item', 
     props: ['itemForUpdate'],
@@ -107,8 +119,33 @@ export default {
          taxes,
            itemTypes,
           itemTypesMinimal,
-          paymentMethods
+          paymentMethods,
+          agents
       }
+    },
+    mounted() {
+      this.$store.dispatch('agencySchemes/getAgencySchemes')
+    },
+    computed: {
+      agencySchemes() {
+        let app = this
+        if (this.$store.state.agencySchemes.agencySchemes.length) {
+          let agencySchemes = []
+          this.$store.state.agencySchemes.agencySchemes.forEach(agencyScheme => {
+            let name = "" 
+            agencyScheme.agents.forEach(agent => {
+              name = app.agents.find(item => item.value == agent).text +  ", " + name
+            });
+            agencySchemes.push({
+              text:  name + " (" + agencyScheme.supplier.name + ")",
+              value: agencyScheme._id
+            })
+          }); 
+          return agencySchemes
+        } else {
+          return []
+        }
+      },
     },
     methods: { 
       

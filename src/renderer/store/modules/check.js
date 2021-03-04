@@ -1,18 +1,12 @@
-import { getItemFromBaseByCode } from '../dbAPI/items/getItemByCode'
-import { getItemFromBaseByBarcode } from '../dbAPI/items/getItemByBarcode'
 import { getSettingsFromBase } from '../dbAPI/settings/getSettings'
-let taxationTypeDefault = ""
-getSettingsFromBase().then(settings => { 
-  taxationTypeDefault = settings.taxationTypeDefault
-})
 
- const state = {
+const state = {
   items: [],
   activeItem: null,
-  taxationTypeDefault: taxationTypeDefault, 
+  taxationTypeDefault: '',
   checkSettings: {
     checkType: 'sell',
-    taxationType: null,    
+    taxationType: '',    
     customer: false,
   },
   alert: {
@@ -41,20 +35,28 @@ const mutations = {
   setCheckType(state, checkType) {
     state.checkSettings.checkType = checkType
   },
+  setActiveItem(state, activeItem) {
+    state.activeItem = activeItem
+  },
   setTaxationType(state, taxationType) {
     state.checkSettings.taxationType = taxationType
+    state.taxationTypeDefault = taxationType
   },
   setCustomer(state, customer) {
     state.checkSettings.customer = customer
   },
+  quantityPlusFloat(state, [ item, quantity ]) {
+    state.items[item].quantity = Number(state.items[item].quantity) + Number(quantity);
+    let temp = state.items[item]
+    state.items.splice(item, 1)  
+    state.items.unshift(temp)  
+    state.activeItem = 0  
+       
+  },
   quantityPlusOne(state, item) {
     state.items[item].quantity++;
     state.activeItem = item
-  },
-  quantityPlusFloat(state, [ item, quantity ]) {
-    state.items[item].quantity = state.items[item].quantity + quantity;
-    state.activeItem = item
-  },
+  },  
   quantityMinusOne(state, item) {
     if (state.items[item].quantity == 1) {
       return
@@ -67,7 +69,7 @@ const mutations = {
     state.activeItem = null;
     state.checkSettings = {
       checkType: 'sell',
-      taxationType: taxationTypeDefault,    
+      taxationType: state.taxationTypeDefault,    
       customer: false,
     }
   },
@@ -96,14 +98,36 @@ const actions = {
   addItemtoCheck({ commit, state }, item) {
     // проверяем есть ли в чеке такой же товар
     let copy = state.items.find(itemInCheck => itemInCheck._id == item._id)
+    console.log(item, copy)
     if (copy) { 
-      //найдем индекс этого товара и отправим его в коммит добавления количества
-      commit('quantityPlusFloat', [ state.items.indexOf(copy), item.quantity ])  
+      if (item.mark) {
+        commit('addItemToCheck', item)
+        commit('itemAdditionManager/init', null, { root: true })
+        setTimeout(function() {
+          commit('itemAdditionManager/barcodeInputFocus', null, { root: true })
+        }, 1)        
+      } else {
+        //найдем индекс этого товара и отправим его в коммит добавления количества
+        commit('quantityPlusFloat', [ state.items.indexOf(copy), item.quantity ])  
+        commit('itemAdditionManager/init', null, { root: true })
+        setTimeout(function() {
+          commit('itemAdditionManager/barcodeInputFocus', null, { root: true })
+        }, 1)
+      }
     } else {
       commit('addItemToCheck', item)
+      commit('itemAdditionManager/init', null, { root: true })
+      setTimeout(function() {
+        commit('itemAdditionManager/barcodeInputFocus', null, { root: true })
+      }, 1)
     }
   },
-  getItemByBarcode({ commit, state }, barcode) {
+  getCheckSettings({ commit, state }) {
+    getSettingsFromBase().then(settings => { 
+      commit('setTaxationType', settings.taxationTypeDefault)
+    })
+  },
+/*  getItemByBarcode({ commit, state }, barcode) {
     return new Promise((resolve, reject) => {
       
       // проверяем есть ли в чеке такой же товар
@@ -196,7 +220,7 @@ const actions = {
       }
 
     })
-  },
+  },*/
   setQuantity({ commit }, [ item, quantity ]) {
     commit('setQuantity', [ item, quantity ] )
   },

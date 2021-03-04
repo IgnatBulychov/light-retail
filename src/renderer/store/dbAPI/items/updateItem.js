@@ -16,6 +16,7 @@ export const updateItemInBase = function(item) {
             measureName: item.measureName,
             measureType: item.measureType,
             tax: item.tax,
+            agencyScheme: item.agencyScheme,
           } }, { multi: true }, function (err, numReplaced) {
           if (err) {
               reject(false)

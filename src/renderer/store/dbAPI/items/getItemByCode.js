@@ -4,9 +4,6 @@ const application = remote.app
 var Datastore = require('nedb')
 var db = new Datastore({ filename: `${application.getPath('userData')}/base/items.db`})
 
-import { getFolderByID } from './getFolderByID';
-import { getSettingsFromBase } from '../settings/getSettings'
-
 export const getItemFromBaseByCode = function(inputCode) {
   return new Promise(function(resolve, reject){  
     db.loadDatabase(function (err) {       
@@ -14,26 +11,8 @@ export const getItemFromBaseByCode = function(inputCode) {
         if (err) {
           reject(err) 
         }      
-        if (item) {
-          if (item.parent == "root") {
-            getSettingsFromBase().then((settings) => {
-              item.taxationType = settings.taxationTypeDefault
-              resolve(item)
-            })
-          } else {
-            getFolderByID(item).then((parent) => {
-              //если в папке не задана СНО
-              if (parent.taxationType) {
-                item.taxationType = parent.taxationType
-                resolve(item)
-              } else {
-                getSettingsFromBase().then((settings) => {
-                  item.taxationType = settings.taxationTypeDefault
-                  resolve(item)
-                })
-              }              
-            }) 
-          }                   
+        if (item) {     
+          resolve(item)
         } else {
           resolve(null)
         }   

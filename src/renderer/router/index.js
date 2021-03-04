@@ -51,6 +51,11 @@ export default new Router({
                     component: require('@/components/customers/customers').default
                   },
                   {
+                    path: 'agency-schemes',
+                    name: 'agency-schemes',
+                    component: require('@/components/agencySchemes/agency-schemes').default
+                  },
+                  {
                     path: 'suppliers',
                     name: 'suppliers',
                     component: require('@/components/suppliers/suppliers').default

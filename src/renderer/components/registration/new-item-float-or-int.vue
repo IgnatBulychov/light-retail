@@ -1,10 +1,10 @@
 <template>
   <div>
     <v-dialog eager 
-      @keydown.esc="closeDialogSettingFloatMeasure()"
+      @keydown.esc="closeDialogSettingFloatMeasure(); $store.commit('itemAdditionManager/init')"
       max-width="50%"
       v-model="dialogSettingFloatMeasure"  
-      v-on:click:outside="closeDialogSettingFloatMeasure"
+      v-on:click:outside="closeDialogSettingFloatMeasure; $store.commit('itemAdditionManager/init')"
     >
     <div @click.prevent="$refs.itemQuantity.focus()">
     <v-card>
@@ -13,7 +13,7 @@
           Укажите количество
         </span> 
         <v-spacer></v-spacer>
-          <v-btn icon @click="closeDialogSettingFloatMeasure()">
+          <v-btn icon @click="closeDialogSettingFloatMeasure(); $store.commit('itemAdditionManager/init')">
             <v-icon>mdi-close</v-icon>
           </v-btn>
         </v-card-title>
@@ -25,14 +25,13 @@
             label="Количество"
             v-model="quantity"
             :rules="quantityRules"
-            v-on:keyup.enter="setFloatMeasure()"
           ></v-text-field>   
       
         </v-card-text>
         <v-card-actions>    
            <v-spacer></v-spacer>
       
-          <v-btn type="submit" width="40%" height="50px" dark color="green lighten-2">
+          <v-btn type="submit" @click="setFloatMeasure()" width="40%" height="50px" dark color="green lighten-2">
               <v-chip class="ma-2" color="gray" label dark text-color="white">
                 <v-icon> mdi-keyboard </v-icon> Enter
               </v-chip> Ок        
@@ -96,13 +95,15 @@ export default {
     },
     methods: {
       setFloatMeasure() {
-        this.$store.commit('itemAdditionManager/setQuantity', this.quantity)
-        this.quantity = ""
-        this.dialogSettingFloatMeasure = false
+        if (this.quantity != "") {
+          this.$store.commit('itemAdditionManager/setQuantity', this.quantity)
+          this.quantity = ""
+          this.dialogSettingFloatMeasure = false
+        }        
       },
       closeDialogSettingFloatMeasure() {
-        this.$store.commit('itemAdditionManager/barcodeInputFocus')
-        this.$store.commit('itemAdditionManager/setLiveStep', "init")
+        let app =this
+        setTimeout(function() {app.$store.commit('itemAdditionManager/barcodeInputFocus') }, 1) 
         this.quantity = ""
         this.dialogSettingFloatMeasure = false
       }

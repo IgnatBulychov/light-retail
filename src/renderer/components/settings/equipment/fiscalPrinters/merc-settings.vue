@@ -126,22 +126,18 @@ export default {
     connectionTest() {
      let app = this
 
-        var query = {
-          sessionKey: null,
-          command: "OpenSession",
-          portName: app.fiscalPrinter.settings.comFile,
-          baudRate: app.fiscalPrinter.settings.baudRate,
-          model: app.fiscalPrinter.settings.model,
-          //debug: true,
-          //logPath: "c:\temp"
-        }
+      var query = {
+        sessionKey: null,
+        command: "OpenSession",
+        portName: app.fiscalPrinter.settings.comFile,
+        baudRate: app.fiscalPrinter.settings.baudRate,
+        model: app.fiscalPrinter.settings.model
+      }
         
-        axios.defaults.headers.post['Content-Type'] = 'application/json; charset=utf-8';
+      axios.defaults.headers.post['Content-Type'] = 'application/json; charset=utf-8';
 
-        axios.post('http://localhost:50010/api.json', 
-          JSON.stringify(query)
-        )
-        .then(function (response) {
+      axios.post('http://localhost:50010/api.json', JSON.stringify(query))
+      .then(function (response) {
           if (response.data.result != 0) {
              app.alert = {
               type: 'error',
@@ -150,32 +146,29 @@ export default {
               timeout: 5000
             }
           } else if (response.data.result == 0) {
-             axios.post('http://localhost:50010/api.json', 
-          JSON.stringify({
-        sessionKey: response.data.sessionKey,
-        command: "GetCommonInfo"
-        })
-        )
-        .then(function (response) {
-          app.alert = {
-              type: 'error',
-              show: true,
-              text: "Связь с ККТ № " + response.data.kktNum + " установлена",
-              timeout: 5000
-            }
             axios.post('http://localhost:50010/api.json', 
-          JSON.stringify({
-        sessionKey: response.data.sessionKey,
-        command: "CloseSession"
-        })
-        )
-        })
-            
-             
+              JSON.stringify({
+                sessionKey: response.data.sessionKey,
+                command: "GetCommonInfo"
+              })
+            )
+            .then(function (response) {
+                app.alert = {
+                    type: 'error',
+                    show: true,
+                    text: "Связь с ККТ № " + response.data.kktNum + " установлена",
+                    timeout: 5000
+                }
+                axios.post('http://localhost:50010/api.json', 
+                  JSON.stringify({
+                    sessionKey: response.data.sessionKey,
+                    command: "CloseSession"
+                  })
+                )
+            })
           }
           console.log(response);
         })
-			
     },
     storeSettings() {
       let app = this

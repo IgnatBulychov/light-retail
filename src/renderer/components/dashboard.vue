@@ -31,24 +31,51 @@
           </v-list-item-icon>
           <v-list-item-title>Отчеты</v-list-item-title>
         </v-list-item>
-        <v-list-item v-if="currentUser.role == 'admin'" color="success" link to='/dashboard/items?folder=root'>
+
+
+      <v-list-group
+        color="success"
+        prepend-icon="mdi-book"
+      >
+        <template v-slot:activator>
+          <v-list-item-title>Справочники</v-list-item-title>
+        </template>
+
+    
+
+        <v-list-item sub-group v-if="currentUser.role == 'admin'" color="success" link to='/dashboard/items?folder=root'>
           <v-list-item-icon>
             <v-icon>mdi-package-variant</v-icon>
           </v-list-item-icon>
           <v-list-item-title>Товары</v-list-item-title>
         </v-list-item>
-        <v-list-item v-if="currentUser.role == 'admin'" color="success" link to='/dashboard/customers'>
+
+         <v-list-item v-if="currentUser.role == 'admin'" color="success" link to='/dashboard/customers'>
           <v-list-item-icon>
             <v-icon>mdi-account-multiple-outline</v-icon>
           </v-list-item-icon>
           <v-list-item-title>Клиенты</v-list-item-title>
         </v-list-item>
+        
         <v-list-item v-if="currentUser.role == 'admin'" color="success" link to='/dashboard/suppliers'>
           <v-list-item-icon>
             <v-icon>mdi-account-box-multiple-outline</v-icon>
           </v-list-item-icon>
           <v-list-item-title>Поставщики</v-list-item-title>
         </v-list-item>
+
+        <v-list-item v-if="currentUser.role == 'admin'" color="success" link to='/dashboard/agency-schemes'>
+          <v-list-item-icon>
+            <v-icon>mdi-face-agent</v-icon>
+          </v-list-item-icon>
+          <v-list-item-title>Агентские схемы</v-list-item-title>
+        </v-list-item>
+
+        
+ </v-list-group>
+
+      
+       
         <v-list-item v-if="currentUser.role == 'admin'" color="success" link to='/dashboard/settings'>
           <v-list-item-icon>
             <v-icon>mdi-cogs</v-icon>
@@ -94,7 +121,7 @@
       </v-dialog>
     </v-navigation-drawer>
 
-    <v-main  height="100vh" >
+    <v-main >
       <v-container class="main-container" fluid>
         <router-view></router-view>
       </v-container>

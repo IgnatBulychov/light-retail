@@ -52,6 +52,7 @@
                   color="primary"
                   tile outlined 
                   text
+                
                   @click="dialogSelectFiscalPrinterModel = false; dialogMercSettings = true"
                 >
                   Меркурий
@@ -102,8 +103,8 @@
             </v-col>
             <v-col cols="2"> 
               <v-switch 
-                v-model="listActivity[key]"
-                @change="updateEquipment(equipmentItem, key)"
+                v-model="equipmentItem.active"
+                @change="updateEquipmentItem(equipmentItem)"
               ></v-switch>
             </v-col>
             <v-col cols="2">                   
@@ -192,7 +193,9 @@ export default {
     removeEquipmentItem(id){
       this.$store.dispatch('equipment/removeEquipmentItem', id)
     },
-    
+    updateEquipmentItem(equipment) {
+      this.$store.dispatch('equipment/updateEquipmentItem', equipment)
+    },
     createScanner(scanner) {
       let app = this
       this.$store.dispatch('equipment/createEquipmentItem', scanner)
