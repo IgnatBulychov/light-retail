@@ -23,7 +23,8 @@ export default {
             timeout: 2000,
             type: "success",
             text: ''
-          }
+          },
+          lodaing: false
         }
     },
     destroyed() {
@@ -74,7 +75,10 @@ export default {
       'printAtol': function () {
           let app = this 
           console.log("печать чека Атол")
-          app.printCheck()
+          if (app.printAtol) {
+            app.printCheck()
+          } 
+          
       }
     },
     methods: {
@@ -101,7 +105,9 @@ export default {
 
         if (this.customer) {
           check.clientInfo = {}
-          check.clientInfo.emailOrPhone = this.customer.email ? this.customer.email : this.customer.phone
+          if (this.customer.email || this.customer.phone) {            
+            check.clientInfo.emailOrPhone = this.customer.email ? this.customer.email : this.customer.phone
+          }
           check.clientInfo.vatin = this.customer.vatin
           check.clientInfo.name = this.customer.name
         }
@@ -141,30 +147,32 @@ export default {
         
         check.payments = []
 
-        let sum = 0;
-
-        if (isNaN(Number(app.getFromCustomer))) {
-            sum = app.summ      
+//если строка, то уже определен тип, если обьект - то комбооплата
+        if (typeof app.paymentType == 'string') {
+          check.payments.push({
+              "type": app.paymentType,
+              "sum": Number(app.getFromCustomer).toFixed(2)
+          })
         } else {
-            if (app.getFromCustomer == "") { 
-            sum = Number(Number(app.summ).toFixed(2))
-            } else if (Number(app.getFromCustomer) >= Number(app.summ)) {
-            sum = Number(Number(app.getFromCustomer).toFixed(2))
+          for (var key in app.paymentType) {
+            if (app.paymentType[key]) {
+              check.payments.push({
+                  "type": key,
+                  "sum": Number(app.paymentType[key]).toFixed(2)
+              })
             }
+          }
+          
         }
 
-        check.payments[0] =  {
-          "type": app.paymentType,
-          "sum":  app.paymentType == "electronically" ? Number(Number(app.summ).toFixed(2)) : sum
-        }
-  
         fs.appendFile(application.getPath('userData') + "/logs/checks.txt", new Date().toLocaleString().replace(/:/g, '-') + " JSON: " + JSON.stringify(check) + "\n \n", function (err) {})            
 
         fptr.processJsonAsync(
         check,
         (err, result) => {
           if (err) {
-            app.$emit('checkPrinted',{
+            console.log('Атол: ошибка печати чека')
+            app.$emit('check-printed-atol',{
               show: true,
               timeout: 3000,
               type: "error",
@@ -174,7 +182,7 @@ export default {
             throw err;
           } else {
             fptr.close()   
-            app.$emit('checkPrinted', {
+            app.$emit('check-printed-atol', {
               show: true,
               timeout: 3000,
               type: "success",
@@ -183,7 +191,45 @@ export default {
           }
         });
 
-        }
+        },
+        openShift() {
+          let app = this
+          app.lodaing = true
+          let task = {}
+          task.type = "openShift"
+          task.operator = {}
+          task.operator.name = app.currentUser.name
+          if (task.operator.vatin) {
+            task.operator.vatin = app.currentUser.vatin
+          }
+          fptr.processJsonAsync(
+          task,
+          (err, result) => {
+            if (err) {
+              app.lodaing = false
+              app.$emit('check-printed-atol',{
+                show: true,
+                timeout: 3000,
+                type: "error",
+                text: 'Нет связи с кассой'
+              }) 
+              fptr.close()   
+              throw err;
+            } else {
+              app.lodaing = false
+              console.log('reportX', result);  
+              app.$emit('check-printed-atol', {
+                show: true,
+                timeout: 3000,
+                type: "success",
+                text: 'Операция выполнена'
+              }) 
+              fptr.close()      
+            }
+          });
+          
+          fs.writeFileSync(application.getPath('userData') + "/logs/" + new Date().toLocaleString().replace(/:/g, '-') + "-openShift.log", task)
+        },
     }
 }
 </script>

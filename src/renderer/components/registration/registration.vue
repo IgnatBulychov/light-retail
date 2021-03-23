@@ -2,7 +2,7 @@
   <div @click="$store.commit('itemAdditionManager/barcodeInputFocus')"  color="grey lighten-2" class="registration-block">
 
    
-<item-finder @to-payment="toPayment" @toItemChanging="toItemChanging()"/>
+<item-finder @toPayment="toPayment" @toItemChanging="toItemChanging()"/>
 
 <new-item-float-or-int />
 
@@ -165,122 +165,9 @@
       v-model="dialogPayment"  
       v-on:click:outside="barcodeInputFocus"
     >
-     <div  @click.prevent="$refs.getFromCustomerInput.focus()">
-      <v-card>
-        <v-card-title><h2>
-          <span class="text-lg-h6">
-          К оплате   {{ summ }}   ₽   
-          </span> </h2>
-          <v-spacer></v-spacer>
-          <v-btn icon @click="closeDialogPayment()">
-            <v-icon>mdi-close</v-icon>
-          </v-btn>
-        </v-card-title>
-        <v-card-text>
-          <v-text-field
-            ref="getFromCustomerInput"
-            prefix="₽"
-            :placeholder="summ"
-            append-icon="mdi-rub"
-            color="green"
-            label="Принято от клиента"
-            v-model="getFromCustomer"
-            v-on:keyup.121="toConfirmCashless()"
-            v-on:keyup.114="printCheck('cash')"
-            :rules="getFromCustomerRules"
-          ></v-text-field>        
-          <div v-if="(getFromCustomer-summ) > 0">
-            <h2 class="text-lg-h6"> Сдача: {{ (getFromCustomer-summ).toFixed(2) }} </h2>
-          </div>
-        </v-card-text>
-        <v-card-actions>          
-          <v-btn
-            width="45%"
-            height="50px"
-            dark
-            :disabled="!items.length"
-            color="green lighten-2"
-            @click="printCheck('cash')"
-          >
-                <v-chip
-                  class="ma-2"
-                  color="gray"
-                  label
-                  text-color="white"
-                >
-                  <v-icon left>
-                    mdi-keyboard
-                  </v-icon>
-                  F3
-                </v-chip> 
-                {{  (getFromCustomer-summ) > 0 ? "Наличными" : "Наличными без сдачи"}}             
-          </v-btn>
-          <v-spacer></v-spacer>
-          <v-btn
-            @click="toConfirmCashless()"
-            width="45%"
-            height="50px"
-            color="green lighten-2"
-            dark
-          >
-            <v-chip
-              class="ma-2"
-              color="gray"
-              label
-              text-color="white"
-            >
-              <v-icon left>
-                mdi-keyboard
-              </v-icon>
-              F10
-            </v-chip>
-            <v-icon>mdi-credit-card-outline</v-icon> Банковской картой
-          </v-btn>
-          <div>
-            <v-card-actions>
-            Другие способы оплаты
-            </v-card-actions>
-          </div>
-        </v-card-actions>
-      </v-card>
-       <!-- диалог подтверждения безналичного расчета -->
-
-
-    <v-dialog eager 
-      @keydown.esc="closeDialogConfirmСashless()"
-      max-width="60%"
-      v-model="dialogConfirmСashless"  
-      v-on:click:outside="getFromCustomerFocus"     
-    >
-      <div tabindex="0" ref="dialogConfirmCashlessDiv" v-on:keyup.enter="printCheck('electronically')">
-        <v-card>
-          <v-card-title>
-            <h2> <span class="text-lg-h6"> К оплате {{ summ }} ₽</span> </h2>     
-          </v-card-title>
-          <v-card-text class="text-center">
-            <h3> Оплата по банковскому терминалу прошла успешно? </h3>
-          </v-card-text>
-          <v-card-actions>          
-            <v-btn @click="printCheck('electronically')" :disabled="!items.length" width="40%" height="50px" dark color="green lighten-2">
-              <v-chip class="ma-2" color="gray" label dark text-color="white">
-                <v-icon> mdi-keyboard </v-icon> Enter
-              </v-chip> Да         
-            </v-btn>
-            <v-spacer></v-spacer>
-            <v-btn @click="closeDialogConfirmСashless()" width="40%" height="50px">
-              <v-chip class="ma-2" color="gray" label dark text-color="white" >
-                <v-icon> mdi-keyboard </v-icon> Esc
-              </v-chip> Отмена       
-            </v-btn>
-          </v-card-actions>
-        </v-card>
-      </div>
+      <payment @print-check="printCheck" :summ="summ" />
     </v-dialog>
-  </div>
-  </v-dialog>
 
-
-   
 
     <!-- диалог изменения позиции -->
 
@@ -348,7 +235,7 @@
 
 
     <fiscal-printer 
-      @checkPrinted="checkWasPrinted" 
+      @check-printed="checkWasPrinted" 
       :print="print" 
       :summ="summ" 
       :paymentType="paymentType" 
@@ -370,11 +257,13 @@ import SetMark from './set-mark'
 
 import Alert from '../alerts/alert'
 import CheckSettings from './check-settings.vue'
+import Payment from './payment.vue'
 export default {
   name: 'registration',
   components: {
     AddItemFromBase, Alert, FiscalPrinter, CheckSettings, 
-    ItemFinder, NewItemFloatOrInt, SetMark
+    ItemFinder, NewItemFloatOrInt, SetMark,
+    Payment
   },
   data() {
     return {
@@ -382,15 +271,14 @@ export default {
       dialogAddItemFromBase: false,
       dialogPayment: false,
       dialogItemChanging: false,
-      dialogConfirmСashless: false,
       dialogScanDatamatrix: false,
       dialogScanDatamatrixFromComPort: false,
       dialogCheckSettings: false,
       datamatrixCode: "",
       nomenclatureCode: "",
-      currentMarkItem: null,
-      getFromCustomer: "",    
-      paymentType: '',    
+      currentMarkItem: null,  
+      paymentType: '',
+      getFromCustomer: '',    
       quantity: "",
       quantityOfSelectedItem: "",
       print: false,
@@ -399,7 +287,7 @@ export default {
         timeout: 2000,
         type: "success",
         text: ''
-      }
+      },      
     }
   },
   mounted () {
@@ -448,17 +336,6 @@ export default {
         }              
       }      
     },
-    getFromCustomerRules() {      
-      if (isNaN(Number(this.getFromCustomer))) {
-        return [v => v > 0 || 'Некорректное значение']
-      } else {
-        if (this.getFromCustomer == "") {
-           return []  
-        } else {
-         return [v => v > 0 || 'Некорректное значение']
-        }              
-      }      
-    },
     
    /* currentScanner() {
       return this.$store.getters['equipment/currentScanner']
@@ -474,14 +351,16 @@ export default {
     changeQuantity(item, changing) {
       this.$store.dispatch('check/changeQuantity', [ item, changing ])      
     },
-    printCheck(paymentType) {
+    printCheck(data) {
       console.log("Registration: print check")
-      this.paymentType = paymentType
-      this.print = true
-      this.dialogConfirmСashless = false       
+      this.paymentType = data.paymentType
+      this.getFromCustomer = data.getFromCustomer
+      this.print = true     
       this.dialogPayment = false
+      this.barcodeInputFocus() 
     },
     checkWasPrinted(result) {
+      console.log('!', result)
       this.alert = result
       if (result.type == "success") {
         this.print = false
@@ -507,17 +386,12 @@ export default {
       }
       this.dialogPayment = true;
       let app = this
-      setTimeout(function() { app.$refs.getFromCustomerInput.focus() }, 1)
+      setTimeout(function() { app.$store.commit('payment/cashInputFocus')  }, 1)
     },
     toScanDatamatrix() {
       this.dialogScanDatamatrix = true;
       let app = this
       setTimeout(function() { app.$refs.datamatrixInput.focus() }, 1)
-    },
-    toConfirmCashless() {
-      this.dialogConfirmСashless = true;
-      let app = this
-      setTimeout(function() { app.$refs.dialogConfirmCashlessDiv.focus() }, 1)
     },
     toItemChanging() {
       let app = this 
@@ -552,11 +426,6 @@ export default {
       this.dialogScanDatamatrixFromComPort = false
       let app = this
       setTimeout(function() { app.$store.commit('itemAdditionManager/barcodeInputFocus') }, 1)
-    },
-    closeDialogConfirmСashless() {
-      this.dialogConfirmСashless = false
-      let app = this
-      setTimeout(function() { app.$refs.getFromCustomerInput.focus() }, 1)
     },
     closeDialogItemChanging() {
       this.dialogItemChanging = false

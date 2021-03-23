@@ -16,6 +16,14 @@ const opts = {
         locales: { ru },
         current: 'ru',
     },
+   /* theme: {
+        themes: {
+          dark: {
+            primary: "#14C6FF",
+            secondary: "#424242",
+          }
+        }
+    }*/
 }
 
 

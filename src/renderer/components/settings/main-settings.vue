@@ -18,13 +18,50 @@
       </v-tooltip>
           
       </v-card-title>
+
       <v-card-text>
           <v-select
           :items="taxationTypes"
           label="СНО по умолчанию"
           v-model="taxationTypeDefaultTemp"
           ></v-select> 
+
+          Используемые типы оплат:
+      <v-checkbox
+        v-model="paymentTypesDefaultTemp"
+        label="Наличными"
+        value="cash"
+      ></v-checkbox>
+      <v-checkbox
+        v-model="paymentTypesDefaultTemp"
+        label="Безналичными"
+        value="electronically"
+      ></v-checkbox>
+      <v-checkbox
+        v-model="paymentTypesDefaultTemp"
+        label="Предоплата"
+        value="prepaid"
+      ></v-checkbox>
+      <v-checkbox
+        v-model="paymentTypesDefaultTemp"
+        label="Оплата в кредит"
+        value="credit"
+      ></v-checkbox>
+      <v-checkbox
+        v-model="paymentTypesDefaultTemp"
+        label="Иная форма оплаты (оплата встречным представлением)"
+        value="other"
+      ></v-checkbox>
+      <v-checkbox
+        v-model="paymentTypesDefaultTemp"
+        label="Комбооплата"
+        value="combo"
+      ></v-checkbox>
+
       </v-card-text>
+
+      
+
     </v-card>
   </v-container>
 </template>
@@ -37,6 +74,7 @@ export default {
     return {
       taxationTypes,      
       taxationTypeDefaultTemp: null,
+      paymentTypesDefaultTemp: ['cash','electronically'],
       alert: {
         show: false,
         timeout: 2000,
@@ -46,19 +84,24 @@ export default {
     }
   },
   mounted() {
-this.$store.dispatch('settings/getSettings')
-this.taxationTypeDefaultTemp = this.taxationTypeDefault
+    this.$store.dispatch('settings/getSettings')
+    this.taxationTypeDefaultTemp = this.taxationTypeDefault
+    this.paymentTypesDefaultTemp = this.paymentTypesDefault
   },
   computed: {
     taxationTypeDefault() {
       return this.$store.state.settings.mainSettings.taxationTypeDefault
+    },
+    paymentTypesDefault() {
+      return this.$store.state.settings.mainSettings.paymentTypesDefault
     }
   },
   methods: {
     saveMainSettings() {
       let app = this
       this.$store.dispatch('settings/saveMainSettings', {
-        taxationTypeDefault: app.taxationTypeDefaultTemp
+        taxationTypeDefault: app.taxationTypeDefaultTemp,
+        paymentTypesDefault: app.paymentTypesDefaultTemp
       })
       this.alert = {
         show: true,

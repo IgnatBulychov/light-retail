@@ -13,7 +13,7 @@ export default [
     },
     {
       text: 'агентское вознаграждение',
-      value: 'agentCommission '
+      value: 'agentCommission'
     },
     
     {

@@ -101,6 +101,7 @@ const actions = {
     console.log(item, copy)
     if (copy) { 
       if (item.mark) {
+        item.quantity = item.quantity + copy.quantity
         commit('addItemToCheck', item)
         commit('itemAdditionManager/init', null, { root: true })
         setTimeout(function() {
@@ -127,100 +128,6 @@ const actions = {
       commit('setTaxationType', settings.taxationTypeDefault)
     })
   },
-/*  getItemByBarcode({ commit, state }, barcode) {
-    return new Promise((resolve, reject) => {
-      
-      // проверяем есть ли в чеке такой же товар
-      if (state.items.find(item => item.barcodes.includes(Number(barcode)))) {
-        // если есть ищем его 
-        let item = state.items.find(item => item.barcodes.includes(Number(barcode)))
-        // и увеличиваем его количество на 1 если товар не маркированный
-        // если маркированый ждем коммит от компонента регистрации, если успешно отсканирован код
-        if (item.mark) {
-          //клонируем объект для создания независимой копии
-          let clone = {}
-          Object.assign(clone, item)
-          
-          resolve(clone)
-        } else {
-          //найдем индекс этого товара и отправим его в коммит
-          commit('quantityPlusOne', state.items.indexOf(item))                      
-        }
-      } else {  
-        getItemFromBaseByBarcode(barcode).then(item => {
-
-          // если товар не существует
-          if (!item) {
-            commit('setAlert',{
-              show: true,
-              type: "error",
-              timeout: 2000,
-              text: 'Ничего не найдено'
-            })
-            return
-          }
-
-          // если маркированый ждем коммит от компонента регистрации, если успешно отсканирован код
-          if (item.mark) {
-            resolve(item)
-          } else {
-            // если товара нет в чеке назначаем ему количество равное одному
-            item.quantity = 1;
-            // и добавляем в чек            
-            commit('addItemToCheck', item)
-          } 
-        });
-      }
-    })
-  },
-  getItemByCode({ commit, state }, code) {
-    return new Promise((resolve, reject) => {
-
-      // проверяем есть ли в чеке такой же товар
-      if (state.items.find(item => item.code == code)) {
-        // если есть ищем его 
-        let item = state.items.find(item => item.code == code)
-        // и увеличиваем его количество на 1 если товар не маркированный
-        // если маркированый ждем коммит от компонента регистрации, если успешно отсканирован код
-        if (item.mark) {
-          //клонируем объект для создания независимой копии
-          let clone = {}
-          Object.assign(clone, item)
-          
-          resolve(clone)
-        } else {
-          //найдем индекс этого товара и отправим его в коммит
-          commit('quantityPlusOne', state.items.indexOf(item))                      
-        }  
-        
-      } else { 
-        getItemFromBaseByCode(code).then(item => {          
-          
-          // если товар не существует
-          if (!item) {
-            commit('setAlert',{
-              show: true,
-              type: "error",
-              timeout: 2000,
-              text: 'Ничего не найдено'
-            })
-            return
-          }
-
-
-          if (item.mark) {
-            resolve(item)
-          } else {
-            // если товара нет в чеке назначаем ему количество равное одному
-            item.quantity = 1;
-            // и добавляем в state, в чек
-            commit('addItemToCheck', item)
-          } 
-        });
-      }
-
-    })
-  },*/
   setQuantity({ commit }, [ item, quantity ]) {
     commit('setQuantity', [ item, quantity ] )
   },

@@ -8,7 +8,8 @@ export const saveMainSettingsInBase = function(settings) {
   return new Promise(function(resolve, reject){
     db.loadDatabase(function (err) { 
         db.update({  oneNote: "constant" }, { $set: { 
-              taxationTypeDefault: settings.taxationTypeDefault
+              taxationTypeDefault: settings.taxationTypeDefault,
+              paymentTypesDefault: settings.paymentTypesDefault
             } }, { multi: true }, function (err, numReplaced) {
             if (err) {
                 reject(false)

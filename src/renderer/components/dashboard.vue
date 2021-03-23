@@ -43,7 +43,7 @@
 
     
 
-        <v-list-item sub-group v-if="currentUser.role == 'admin'" color="success" link to='/dashboard/items?folder=root'>
+        <v-list-item  v-if="currentUser.role == 'admin'" color="success" link to='/dashboard/items?folder=root'>
           <v-list-item-icon>
             <v-icon>mdi-package-variant</v-icon>
           </v-list-item-icon>
@@ -73,6 +73,7 @@
 
         
  </v-list-group>
+        
 
       
        

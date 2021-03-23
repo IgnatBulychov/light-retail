@@ -4,7 +4,8 @@ import { saveMainSettingsInBase } from '../dbAPI/settings/saveMainSettings'
 
 const state = {
   mainSettings: {
-    taxationTypeDefault: null
+    taxationTypeDefault: null,
+    paymentTypesDefault: []
   },
   currentFiscalPrinter: null,
   alert: {
@@ -16,6 +17,7 @@ const state = {
 const mutations = {
   setSettings (state, settings) {
     state.mainSettings.taxationTypeDefault = settings.taxationTypeDefault
+    state.mainSettings.paymentTypesDefault = settings.paymentTypesDefault
   }
 }
 

@@ -12,28 +12,35 @@
             <v-icon>mdi-clipboard-arrow-down-outline</v-icon> Закрытие смены (Z-отчет)
         </v-btn> 
         <alert :alert="alert" />
+
+    <fiscal-printer 
+      @check-printed="checkWasPrinted" 
+      :print="print" 
+      :printOpenShift="printOpenShift"
+      :printReportX="printReportX"
+      :printCloseShift="printCloseShift"
+      :printCashIn="printCashIn"
+      :printCashOut="printCashOut"
+    />
+
   </div>
 </template>
 
 <script>
-const fs = require("fs");
-import Alert from '../alerts/alert.vue'
-const w = require('node-atol-wrapper');
-const fptr = new w.Fptr10();
-const remote = require('electron').remote;
-const application = remote.app;
-
-
+import FiscalPrinter from '../equipment/fiscal-printer'
 export default {
 name: 'reports',
 components: {
-  Alert
+  Alert, FiscalPrinter
 },
 data() {
   return {
-    openShiftLodaing: false,
-    closeShiftLodaing: false,
-    reportXLodaing: false,
+    loading: false,
+    printOpenShift:false,
+    printReportX:false,
+    printCloseShift:false,
+    printCashIn: false,
+    printCashOut: false,
     alert: {
       show: false,
       timeout: 3000,
@@ -43,24 +50,11 @@ data() {
   }
 },
 mounted() {
-  this.$store.dispatch('settings/getSettings')
-  fptr.create();
-  let settings = {}
-  settings = fptr.getSettings();     
-  settings.Port = this.currentFiscalPrinter.settings.connection;  // ComPort communication
-  // settings.ComFile = '/dev/ttyACM0'; //ComPort name
-  settings.ComFile = this.currentFiscalPrinter.settings.comFile;  // ComPort name
-  settings.BaudRate = this.currentFiscalPrinter.settings.baudRate;
-  settings.IPAddress = this.currentFiscalPrinter.settings.IPAddress;
-  settings.IPPort = this.currentFiscalPrinter.settings.IPPort;
-  console.log('setSettings', fptr.setSettings(settings));
-  console.log('getSettings',fptr.getSettings());
-  fptr.open()
+  
 },
 destroyed() {
-      fptr.close()
-      fptr.destroy()
-    },
+
+},
 computed: {
   currentFiscalPrinter() {
     return this.$store.getters['equipment/currentFiscalPrinter']
@@ -70,43 +64,11 @@ computed: {
   }
 },
 methods: {
+  checkWasPrinted() {
+
+  },
   openShift() {
-    let app = this
-    app.reportXLodaing = true
-    let task = {}
-    task.type = "openShift"
-    task.operator = {}
-    task.operator.name = app.currentUser.name
-    if (task.operator.vatin) {
-      task.operator.vatin = app.currentUser.vatin
-    }
-    fptr.processJsonAsync(
-    task,
-    (err, result) => {
-      if (err) {
-        app.reportXLodaing = false
-        app.alert = {
-          show: true,
-          timeout: 3000,
-          type: "error",
-          text: 'Нет связи с кассой'
-        }
-        fptr.close()   
-        throw err;
-      } else {
-        app.reportXLodaing = false
-        console.log('reportX', result);  
-        app.alert = {
-          show: true,
-          timeout: 3000,
-          type: "success",
-          text: 'Операция выполнена'
-        }
-        fptr.close()      
-      }
-    });
-    
-    fs.writeFileSync(application.getPath('userData') + "/logs/" + new Date().toLocaleString().replace(/:/g, '-') + "-openShift.log", task)
+      
   },
   reportX() {
      let app = this
