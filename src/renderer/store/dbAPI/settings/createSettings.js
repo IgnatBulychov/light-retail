@@ -9,7 +9,7 @@ export const createSettingsInBase = function() {
         db.loadDatabase(function (err) { 
             db.insert({
                 oneNote: "constant", // просто заметка для поиска этого поля
-                taxationTypeDefault: null,
+                taxationTypeDefault: 'usnIncome',
                 paymentTypesDefault:  ['cash','electronically']
             }, function (err, newDoc) { 
                 if (err) {

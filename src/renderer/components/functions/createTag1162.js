@@ -11,7 +11,9 @@ export const createTag1162 = async function (code) {
         // 010290000047583021MdEfx:Xp6YFd791802992aQIQkI7oHXmzG/mdKxzCUCKTJHXoBODdmCdM5k8Qj7gaZV2xbn66xBXGIKrtfvqPINA2jkbjyj3/O+ky6ou1NA== 
         // 44 4d 02 a3 35 7f 8a b6 4d 64 45 66 78 3a 58 70 36 59 46 64 37
         // to base64 RE0CozV/irZNZEVmeDpYcDZZRmQ3
-        let raw = code
+        //           RE0CozV/irZNZEVmeDpYcDZZRmQ3
+        // 010290000047583021MdEfx:Xp6YFd791802992aQIQkI7oHXmzG/mdKxzCUCKTJHXoBODdmCdM5k8Qj7gaZV2xbn66xBXGIKrtfvqPINA2jkbjyj3/O+ky6ou1NA==   
+        let rawDatamatrix = code
         console.log(code)
         if (code[0] == 0 && code[1] == 1 && code[16] == 2 && code[17] == 1) {
           // если GS1 Dat matrix
@@ -38,9 +40,10 @@ export const createTag1162 = async function (code) {
           }
           serial = ascii.join('')
 
-          let nomenclatureCode = hex64.toBase64("444d" + gtin.toString() + serial.toString()); 
+          //let nomenclatureCode = hex64.toBase64("444d" + gtin.toString() + serial.toString()); 
+          let nomenclatureCode = Buffer.from("444d" + gtin.toString() + serial.toString(), 'hex').toString('base64')
           console.log(gtin,serial,nomenclatureCode, ean13)
-          resolve({gtin,serial,nomenclatureCode, ean13})
+          resolve({gtin:gtin,serial:serial,nomenclatureCode:nomenclatureCode, ean13:ean13, rawDatamatrix:rawDatamatrix})
 
         } else if (code.length == 29) {
             // если обычный DataMatrix
@@ -57,9 +60,9 @@ export const createTag1162 = async function (code) {
                 ascii.push(serial.charCodeAt(i).toString(16))          
             }
             serial = ascii.join('') + "2020" 
-            let nomenclatureCode =  hex64.toBase64("444d" + gtin.toString() + serial.toString()); 
-
-            resolve({gtin,serial,nomenclatureCode, ean13, raw})
+           // let nomenclatureCode =  hex64.toBase64("444d" + gtin.toString() + serial.toString()); 
+            let nomenclatureCode = Buffer.from("444d" + gtin.toString() + serial.toString(), 'hex').toString('base64')
+            resolve({gtin:gtin,serial:serial,nomenclatureCode:nomenclatureCode, ean13:ean13, rawDatamatrix:rawDatamatrix})
 
         } else {
           reject({

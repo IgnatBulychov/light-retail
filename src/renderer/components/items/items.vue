@@ -66,13 +66,10 @@
           <v-col cols="5">
             Наименование
           </v-col>
-          <v-col cols="1">
-            Остаток
-          </v-col>
           <v-col cols="2">
             Цена
           </v-col>
-          <v-col cols="2">
+          <v-col cols="3">
             Редактировать
           </v-col>
         </v-row>
@@ -101,7 +98,7 @@
 
           </v-col>
 
-          <v-col cols="8"  
+          <v-col cols="7"  
             @click="$router.push({
               path: '/dashboard/items',
               query: {
@@ -112,7 +109,7 @@
             <v-icon class="mr-4">mdi-folder-open-outline</v-icon>   {{folder.title}}
           </v-col>
 
-          <v-col cols="2" class="text-center">
+          <v-col cols="3" class="text-center">
             <v-tooltip bottom>
               <template v-slot:activator="{ on, attrs }">
                 <v-btn v-bind="attrs" v-on="on" icon @click="folderForUpdate = Object.assign({}, folder); dialogUpdateFolder = true">  
@@ -139,16 +136,12 @@
           <v-col cols="5">
               <v-icon class="mr-4">mdi-package-variant-closed</v-icon>  {{item.title}}
           </v-col>
-
-          <v-col cols="1" class="text-center">
-              {{item.quantity}}
-          </v-col>
-          
+                    
           <v-col cols="2" class="text-center">
               {{item.price}}
           </v-col>
 
-          <v-col cols="2" class="text-center">
+          <v-col cols="3" class="text-center">
             <v-tooltip bottom>
               <template v-slot:activator="{ on, attrs }">
                 <v-btn v-bind="attrs" v-on="on" icon @click="itemForUpdate = Object.assign({}, item); dialogUpdateItem = true">  

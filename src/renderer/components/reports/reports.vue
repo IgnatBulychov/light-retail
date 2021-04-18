@@ -1,29 +1,61 @@
 <template>
-    <div height="100%" width="100%" class="mx-2 my-2">
-        <v-btn @click="openShift()" class="ma-2" tile color="success" :loading="openShiftLodaing" :disabled="reportXLodaing || closeShiftLodaing">
-         <v-icon>mdi-clipboard-arrow-up-outline</v-icon> Открыть смену
-        </v-btn>
-        <br>
-        <v-btn @click="reportX()" class="ma-2" tile color="success" :loading="reportXLodaing" :disabled="openShiftLodaing || closeShiftLodaing">
-            <v-icon>mdi-clipboard-arrow-right-outline</v-icon> Промежуточный отчет (X-отчет)
-        </v-btn> 
-        <br>
-        <v-btn @click="closeShift()" class="ma-2" tile color="success" :loading="closeShiftLodaing" :disabled="openShiftLodaing || reportXLodaing">
-            <v-icon>mdi-clipboard-arrow-down-outline</v-icon> Закрытие смены (Z-отчет)
-        </v-btn> 
-        <alert :alert="alert" />
+      <v-container fluid>
+        <v-row>
+          <v-col cols="6">
+            <v-card>
+              <v-card-text>
+                <v-progress-linear
+                  v-if="loading"
+                  indeterminate
+                  color="green"
+                ></v-progress-linear>
+                <br>
+                  <v-btn @click="openShift()" class="ma-2" tile color="success" :disabled="loading">
+                  <v-icon>mdi-clipboard-arrow-up-outline</v-icon> Открыть смену
+                  </v-btn>
+                  <br>
+                  <v-btn @click="reportX()" class="ma-2" tile color="success" :disabled="loading">
+                      <v-icon>mdi-clipboard-arrow-right-outline</v-icon> Промежуточный отчет (X-отчет)
+                  </v-btn> 
+                  <br>
+                  <v-btn @click="closeShift()" class="ma-2" tile color="success" :disabled="loading">
+                      <v-icon>mdi-clipboard-arrow-down-outline</v-icon> Закрытие смены (Z-отчет)
+                  </v-btn> 
+                  <v-card>
+                    <v-card-text>
+                      <v-form
+                        ref="form"
+                        v-model="valid"
+                        lazy-validation
+                      >
+                        <v-text-field v-model="cash" :rules="cashRules" label="Введите сумму наличных"  outlined > </v-text-field>                
+                      </v-form>
+                    </v-card-text>
+                    <v-card-actions>
+                    
+                        <v-btn @click="cashIn()" class="ma-2" tile color="primary" :disabled="loading">
+                            <v-icon>mdi-clipboard-arrow-down-outline</v-icon> Внести в кассу
+                        </v-btn> 
+                        <v-spacer></v-spacer>
+                        <v-btn @click="cashOut()" class="ma-2" tile color="info" :disabled="loading">
+                            <v-icon>mdi-clipboard-arrow-up-outline</v-icon> Изъять из кассы
+                        </v-btn> 
+                    </v-card-actions>
+                  </v-card>
+              </v-card-text>
+            </v-card>
+              <alert :alert="alert" />
 
-    <fiscal-printer 
-      @check-printed="checkWasPrinted" 
-      :print="print" 
-      :printOpenShift="printOpenShift"
-      :printReportX="printReportX"
-      :printCloseShift="printCloseShift"
-      :printCashIn="printCashIn"
-      :printCashOut="printCashOut"
-    />
+          <fiscal-printer 
+            @check-printed="checkWasPrinted" 
+            :print="print"
+            :cash="cash"
+          />
 
-  </div>
+ 
+          </v-col>
+                   </v-row>
+            </v-container>
 </template>
 
 <script>
@@ -31,16 +63,20 @@ import FiscalPrinter from '../equipment/fiscal-printer'
 export default {
 name: 'reports',
 components: {
-  Alert, FiscalPrinter
+  FiscalPrinter
 },
 data() {
   return {
+    valid: true,
     loading: false,
-    printOpenShift:false,
-    printReportX:false,
-    printCloseShift:false,
-    printCashIn: false,
-    printCashOut: false,
+    cash: "",
+    print:{
+      openShift: false,
+      reportX: false,
+      closeShift: false,
+      cashIn: false,
+      cashOut: false
+    },
     alert: {
       show: false,
       timeout: 3000,
@@ -49,105 +85,51 @@ data() {
     }
   }
 },
-mounted() {
-  
-},
-destroyed() {
-
-},
 computed: {
   currentFiscalPrinter() {
     return this.$store.getters['equipment/currentFiscalPrinter']
   },
   currentUser() {
     return this.$store.state.users.currentUser
-  }
+  },
+  cashRules() {      
+    if (isNaN(Number(this.cash))) {
+      return ['Некорректное значение',
+            v => !!v || 'Введите значение']
+    } else {
+      return [v => Number(v) > 0 || 'Некорректное значение',
+      v => !!v || 'Введите значение']         
+    }      
+  },
 },
 methods: {
   checkWasPrinted() {
-
+    for (var key in this.print) {
+      this.print[key] = false
+    }
   },
   openShift() {
-      
-  },
+    this.print.openShift = true     
+  }, 
   reportX() {
-     let app = this
-    app.reportXLodaing = true
-    let task = {}
-    task.type = "reportX"
-    task.operator = {}
-    task.operator.name = app.currentUser.name
-    if (task.operator.vatin) {
-      task.operator.vatin = app.currentUser.vatin
-    }
-    fptr.processJsonAsync(
-    task,
-    (err, result) => {
-      if (err) {
-        app.reportXLodaing = false
-        app.alert = {
-          show: true,
-          timeout: 3000,
-          type: "error",
-          text: 'Нет связи с кассой'
-        }
-        fptr.close()   
-        throw err;
-      } else {
-        app.reportXLodaing = false
-        app.alert = {
-          show: true,
-          timeout: 3000,
-          type: "success",
-          text: 'Операция выполнена'
-        } 
-        fptr.close()   
-        console.log('reportX', result);        
-      }
-    });
-    fs.writeFileSync(application.getPath('userData') + "/logs/" + new Date().toLocaleString().replace(/:/g, '-') + "-reportX.log", task)
+    this.print.reportX = true     
   },
   closeShift() {
-     let app = this
-    app.reportXLodaing = true
-    let task = {}
-    task.type = "closeShift"
-    task.operator = {}
-    task.operator.name = app.currentUser.name
-    if (task.operator.vatin) {
-      task.operator.vatin = app.currentUser.vatin
-    }
-    fptr.processJsonAsync(
-    task,
-    (err, result) => {
-      if (err) {
-        app.reportXLodaing = false
-        app.alert = {
-          show: true,
-          timeout: 3000,
-          type: "error",
-          text: 'Нет связи с кассой'
-        }
-        fptr.close()   
-        throw err;
-      } else {
-        app.reportXLodaing = false
-        app.alert = {
-          show: true,
-          timeout: 3000,
-          type: "success",
-          text: 'Операция выполнена'
-        } 
-        fptr.close()   
-        console.log('closeShift', result);        
-      }
-    });
-    fs.writeFileSync(application.getPath('userData') + "/logs/" + new Date().toLocaleString().replace(/:/g, '-') + "-closeShift.log", task)
+    this.print.closeShift = true     
   },
+  cashIn() {
+    if (this.$refs.form.validate()) {
+      this.print.cashIn = true  
+    }   
+  },
+  cashOut() {
+    if (this.$refs.form.validate()) {
+      this.print.cashOut = true     
+    }
+  },
+  
   stopLoading() {
-    this.openShiftLodaing = false
-    this.closeShiftLodaing = false
-    this.reportXLodaing = false
+    
   }
 }
 }

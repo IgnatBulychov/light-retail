@@ -123,6 +123,9 @@ import { getSupplierFromBase } from '../../store/dbAPI/suppliers/getSupplier';
       folders() {
         return this.$store.state.items.folders
       },
+      taxationTypeDefault() {
+        return this.$store.state.settings.mainSettings.taxationTypeDefault
+      },
     },
     methods: {
       selectItem(item, data){
@@ -135,7 +138,13 @@ import { getSupplierFromBase } from '../../store/dbAPI/suppliers/getSupplier';
 
             if (item.parent != "root") {               
               let parent = await getFolderByID(item)
-              taxationType = parent.taxationType
+              if (parent.taxationType) {
+                taxationType = parent.taxationType
+              } else {
+                taxationType = app.taxationTypeDefault
+              }              
+            } else {
+              taxationType = app.taxationTypeDefault
             }
 
             if (item.agencyScheme) {

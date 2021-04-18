@@ -70,6 +70,7 @@ import baudrates from './resources-atol/baudrates.js'
 import comPorts from './resources-atol/comPorts.js'
 const w = require('node-atol-wrapper');
 const fptr = new w.Fptr10();
+const SerialPort = require('serialport')
 
 export default {
   name: 'atol-settings',
@@ -81,7 +82,7 @@ export default {
       models: models,
       connections: connections,
       baudrates: baudrates,
-      comPorts: comPorts,
+      comPorts: [],
       fiscalPrinter:{
         model: "Атол",
         active: true,
@@ -112,8 +113,28 @@ export default {
     fptr.create();
     this.settings = fptr.getSettings();
     console.log('getSettings', this.settings);
+     this.updatePorts() 
   },
   methods: {
+     updatePorts() {
+         let app = this
+        SerialPort.list().then(  portsFromSerial => {
+          console.log(portsFromSerial)
+            let list = []
+            portsFromSerial.forEach(port => {
+              list.push({
+                text: port.path + " " + port.manufacturer,
+                value: port.path
+              })
+            })
+            if (list.length) {
+              app.comPorts = list
+            } 
+          },
+          err =>  {
+            
+          } )
+      },
     connectionTest () {  
       let app = this
      

@@ -91,7 +91,7 @@
         </v-card-text>
 
         
-          <scanner-com-port @scan-data-matrix="scanFromComPortDataMatrix" @scan-ean13="scanFromComPortEan13" />
+          <scanner-com-port @scan-data-matrix="scanFromComPortDataMatrix" @scan-ean13="scanFromComPortEan13"  @scan-ean8="scanFromComPortEan8" />
 
       </v-card>
 </template>
@@ -161,16 +161,19 @@ export default {
       scanFromComPortDataMatrix(code) {
         console.log('доб', code )
         let ean13 = Number(code.slice(3, 16))
-        if (this.dialogCreateItem) {
           this.itemForUpdate.barcodes.push(ean13)
-        } 
+        
       },
+      scanFromComPortEan8(code) {
+        console.log('доб', code )
+          this.itemForUpdate.barcodes.push(Number(code))
+        
+      },  
       scanFromComPortEan13(code) {
         console.log('доб', code )
-        if (this.dialogCreateItem) {
           this.itemForUpdate.barcodes.push(Number(code))
-        } 
-      },  
+       
+      },   
       addBarcode() {
         this.itemForUpdate.barcodes.push(Number(this.barcode))
         this.barcode = ''

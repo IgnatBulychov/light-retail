@@ -33,6 +33,11 @@
 import Alert from '../alerts/alert'
 import { getItemFromBaseByCode } from '../../store/dbAPI/items/getItemByCode'
 import { getItemFromBaseByBarcode } from '../../store/dbAPI/items/getItemByBarcode'
+import { getFolderByID } from '../../store/dbAPI/items/getFolderByID'
+
+import { getAgencySchemeFromBase } from '../../store/dbAPI/agencySchemes/getAgencyScheme'
+import { getSupplierFromBase } from '../../store/dbAPI/suppliers/getSupplier'
+
 import ScannerComPort from '../equipment/scanner-com-port.vue'
 export default {
     name: 'item-finder',
@@ -60,6 +65,9 @@ export default {
       items() {
         return this.$store.state.check.items
       },
+      taxationTypeDefault() {
+        return this.$store.state.settings.mainSettings.taxationTypeDefault
+      },
       barcodeInputFocus() {        
         return this.$store.getters['itemAdditionManager/barcodeInputFocus']
       }
@@ -72,6 +80,7 @@ export default {
     },
     methods: {
       startItemBuilding(item) {
+        let app = this
         async function buildItem(item) {
 
             let taxationType = null
@@ -79,7 +88,13 @@ export default {
 
             if (item.parent != "root") {               
               let parent = await getFolderByID(item)
-              taxationType = parent.taxationType
+              if (parent.taxationType) {
+                taxationType = parent.taxationType
+              } else {
+                taxationType = app.taxationTypeDefault
+              }              
+            } else {
+              taxationType = app.taxationTypeDefault
             }
 
             if (item.agencyScheme) {
@@ -200,7 +215,9 @@ export default {
       scanFromComPortDataMatrix(code) {
         let app = this        
         let datamatrix = code
-        let ean13 = Number(this.inputCode.slice(3, 16))
+        
+        console.log(Number(code.slice(3, 16)))
+        let ean13 = Number(code.slice(3, 16))
         getItemFromBaseByBarcode(ean13).then(item => {
           if (item) {                
             item.datamatrix = datamatrix
@@ -222,6 +239,6 @@ export default {
 
 <style scoped>
 .code-input {
-  height: 10%;
+  height: 10vh;
 }
 </style>

@@ -41,8 +41,10 @@ let scanners = []
 
     port.on('data', function(data) {
       let string = ""
+
+      console.log(data.length)
      
-      for (let index = 0; index < data.length - 2; index++) {
+      for (let index = 0; index < data.length - 1; index++) {
         string = string + String.fromCharCode(data[index])
         if (index == (data.length - 2)) {
           var ioClient = require('socket.io-client')('http://localhost:3001');
@@ -56,6 +58,7 @@ let scanners = []
    
 
 import ioClientVue from 'socket.io-client';
+import { mdiConsoleLine } from '@mdi/js';
 export default {
     name: 'scanner-com-port',
     data() {
@@ -67,13 +70,13 @@ export default {
        let app = this
         this.socket.on('MESSAGE', (data) => {
             console.log(data)
-             console.log("Строка", data.slice(0,-1))
-            if (data.length == 9) {
-               app.$emit('scan-ean8', data.slice(0,-1))
-            } else if (data.length == 14) {
+             console.log("Строка", data)
+            if (data.length == 8) {
+               app.$emit('scan-ean8', data)
+            } else if (data.length == 13) {
                app.$emit('scan-ean13', data)
-            } else if (data.length > 14) {
-              app.$emit('scan-data-matrix', data.slice(0,-1))
+            } else if (data.length > 13) {
+              app.$emit('scan-data-matrix', data)
             }
            
        });

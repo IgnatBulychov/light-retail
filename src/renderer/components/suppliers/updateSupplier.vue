@@ -79,7 +79,7 @@ export default {
     vatinRules() {
       if (this.supplierForUpdate.vatin) {
         return [
-          v => (v.length == 0 || v.length == 12) || 'Некорректный ИНН',
+          v => (v.length == 0 || v.length == 12 || v.length == 10) || 'Некорректный ИНН',
           v =>  /^\d+$/.test(v) || 'Некорректный ИНН'       
         ]
       } else {

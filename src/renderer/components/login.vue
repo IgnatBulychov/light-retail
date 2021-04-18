@@ -2,33 +2,51 @@
  <v-container>
    <v-row justify="center">
       <v-col cols="6" class="mt-5 pt-5 text-center">
-        <v-form
+         <v-form
           @submit.prevent="login()"
           ref="form"
           v-model="valid"
           lazy-validation
         >
+        <v-card>
+           
+              <v-card-title></v-card-title>
+           
+<v-card-text>
+    
          <v-select
+         color="success"
             v-model="user"
             :items="usersSelect"
             label="Пользователь"
           ></v-select>
 
           <v-text-field
+           color="success"
             v-model="password"
             type="password"
             label="Пароль"
           ></v-text-field>
           
-          <v-btn
+         
+
+        
+</v-card-text>
+            <v-card-actions>
+              <v-spacer></v-spacer>
+ <v-btn
             color="success"
             class="mr-4"
             type="submit"
           >
             Начать работу
           </v-btn>
+              <v-spacer></v-spacer>
 
-        </v-form>
+             
+            </v-card-actions>
+          </v-card>
+     </v-form>
       </v-col>
    </v-row>
    <alert :alert="alert" :timeout="2000"/>

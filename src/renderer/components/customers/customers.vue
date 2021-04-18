@@ -14,7 +14,7 @@
               <v-icon>mdi-plus</v-icon> 
             </v-btn>
           </template>
-          <span>Добавить поставщика</span>
+          <span>Добавить клиента</span>
         </v-tooltip>
       </v-card-title>
       <v-card-text>

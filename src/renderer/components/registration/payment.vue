@@ -14,7 +14,7 @@
                   <v-col cols="12" v-for="(paymentTypeDefault, key) in paymentTypesDefault" :key="key" >
                    <v-btn @click="selectedPaymentType = key; setFocus()" :color="selectedPaymentType == key ? 'primary' : 'secondary'"> 
                     <v-icon>{{ selectedPaymentType == key ? "mdi-chevron-right" : ""}}</v-icon>
-                     {{ paymentTypes.find(type => type.value == paymentTypeDefault).text }}  {{ Object.values(getFromCustomer)[key] ? `(${Object.values(getFromCustomer)[key]} ₽)` : "" }}
+                     {{ paymentTypes.find(type => type.value == paymentTypeDefault).text }}  {{ Object.values(acceptedFromCustomer)[key] ? `(${Object.values(acceptedFromCustomer)[key]} ₽)` : "" }}
                      </v-btn>      
                   </v-col>
                 </v-row>
@@ -23,28 +23,29 @@
 
             </v-col>
             <v-col cols="7"  class="custom-block" >  
+              <v-span v-if="taxations.length > 1"> Внимание! Будет напечатано {{ taxations.length }} чека на {{ taxations.length }} разные СНО </v-span>
               <v-card v-if="selectedPaymentType == 0">
                 <v-card-title><h2>
                   <span class="text-lg-h6">
-                  К оплате   {{ summ }}   ₽   
+                  К оплате   {{ sum }}   ₽   
                   </span> </h2>
                 </v-card-title>
                 <v-form @submit.prevent="printCheck('cash')">
                 <v-card-text>
                   <v-text-field
-                    ref="getFromCustomerCashInput"
+                    ref="acceptedFromCustomerCashInput"
                     prefix="₽"
-                    :placeholder="summ"
+                    :placeholder="sum"
                     append-icon="mdi-rub"
                     color="green"
                     label="Принято от клиента наличными"
-                    v-model="getFromCustomer.cash"
-                    :rules="getFromCustomerCashRules"
+                    v-model="acceptedFromCustomer.cash"
+                    :rules="acceptedFromCustomerCashRules"
                     v-on:keyup.38="up()"
                     v-on:keyup.40="down()"
                   ></v-text-field>        
-                  <div v-if="(getFromCustomer.cash-summ) > 0">
-                    <h2 class="text-lg-h6"> Сдача: {{ (getFromCustomer.cash-summ).toFixed(2) }} </h2>
+                  <div v-if="(acceptedFromCustomer.cash-sum) > 0">
+                    <h2 class="text-lg-h6"> Сдача: {{ (acceptedFromCustomer.cash-sum).toFixed(2) }} </h2>
                   </div>
                   <div v-else>
                    <h2 class="text-lg-h6">  &nbsp </h2>
@@ -57,12 +58,12 @@
                     color="success lighten-2"
                     large
                     elevation="1"
-                    :disabled="getFromCustomer.cash == '' ? false: Number(getFromCustomer.cash) < summ ? true: false"
+                    :disabled="acceptedFromCustomer.cash == '' ? false: Number(acceptedFromCustomer.cash) < sum ? true: false"
                     @click="printCheck('cash')"
                     type="submit"
                   >
                         <v-chip
-                          :color="`grey ${getFromCustomer.cash == '' ? 'darken-2': Number(getFromCustomer.cash) < summ ? 'lighten-1': 'darken-2'}`"
+                          :color="`grey ${acceptedFromCustomer.cash == '' ? 'darken-2': Number(acceptedFromCustomer.cash) < sum ? 'lighten-1': 'darken-2'}`"
                           label
                           text-color="white"
                         >
@@ -71,7 +72,7 @@
                           </v-icon>
                           Enter
                         </v-chip> &nbsp
-                        {{  (getFromCustomer.cash-summ) > 0 ? "Оплатить" : "Оплатить без сдачи"}}             
+                        {{  (acceptedFromCustomer.cash-sum) > 0 ? "Оплатить" : "Оплатить без сдачи"}}             
                   </v-btn>
                   <v-spacer></v-spacer>     
                 </v-card-actions>
@@ -81,19 +82,19 @@
               <v-card v-if="selectedPaymentType == 1">
                 <v-card-title><h2>
                   <span class="text-lg-h6">
-                  К оплате   {{ summ }}   ₽   
+                  К оплате   {{ sum }}   ₽   
                   </span> </h2>
                 </v-card-title>
                 <v-form @submit.prevent="printCheck('electronically')">
                 <v-card-text>
                   <v-text-field
-                    :placeholder="summ"                    
+                    :placeholder="sum"                    
                     color="green"
                     prefix="₽"
                     label="Сумма безналичными"
-                    v-model="getFromCustomer.electronically"
-                    ref="getFromCustomerElectronicallyInput"
-                    :rules="getFromCustomerElectronicallyRules"
+                    v-model="acceptedFromCustomer.electronically"
+                    ref="acceptedFromCustomerElectronicallyInput"
+                    :rules="acceptedFromCustomerElectronicallyRules"
                     v-on:keyup.38="up()"
                     v-on:keyup.40="down()"
                   ></v-text-field>   
@@ -105,12 +106,12 @@
                    color="success lighten-2"
                     large
                     elevation="1"
-                    :disabled="getFromCustomer.electronically == '' ? false: Number(getFromCustomer.electronically) != summ ? true: false"
+                    :disabled="acceptedFromCustomer.electronically == '' ? false: Number(acceptedFromCustomer.electronically) != sum ? true: false"
                     @click="printCheck('electronically')"
                     type="submit"
                   >
                         <v-chip
-                          :color="`grey ${getFromCustomer.electronically == '' ? 'darken-2': Number(getFromCustomer.electronically) != summ ? 'lighten-1': 'darken-2'}`"
+                          :color="`grey ${acceptedFromCustomer.electronically == '' ? 'darken-2': Number(acceptedFromCustomer.electronically) != sum ? 'lighten-1': 'darken-2'}`"
                           label
                           text-color="white"
                         >
@@ -129,20 +130,20 @@
               <v-card v-if="selectedPaymentType == 2">
                 <v-card-title><h2>
                   <span class="text-lg-h6">
-                  К оплате   {{ summ }}   ₽   
+                  К оплате   {{ sum }}   ₽   
                   </span> </h2>
                 </v-card-title>
                 <v-form @submit.prevent="printCheck('prepaid')">
                 <v-card-text>
                   <v-text-field
-                    ref="getFromCustomerPrepaidInput"
+                    ref="acceptedFromCustomerPrepaidInput"
                     prefix="₽"
-                    :placeholder="summ"
+                    :placeholder="sum"
                     append-icon="mdi-rub"
                     color="green"
                     label="Сумма предоплаты"
-                    v-model="getFromCustomer.prepaid"
-                    :rules="getFromCustomerPrepaidRules"
+                    v-model="acceptedFromCustomer.prepaid"
+                    :rules="acceptedFromCustomerPrepaidRules"
                     v-on:keyup.38="up()"
                     v-on:keyup.40="down()"
                   ></v-text-field>  
@@ -153,12 +154,12 @@
                     color="success lighten-2"
                     large
                     elevation="1"
-                    :disabled="getFromCustomer.prepaid == '' ? false: Number(getFromCustomer.prepaid) != summ ? true: false"
+                    :disabled="acceptedFromCustomer.prepaid == '' ? false: Number(acceptedFromCustomer.prepaid) != sum ? true: false"
                     @click="printCheck('prepaid')"
                     type="submit"
                   >
                         <v-chip
-                          :color="`grey ${getFromCustomer.prepaid == '' ? 'darken-2': Number(getFromCustomer.prepaid) != summ ? 'lighten-1': 'darken-2'}`"
+                          :color="`grey ${acceptedFromCustomer.prepaid == '' ? 'darken-2': Number(acceptedFromCustomer.prepaid) != sum ? 'lighten-1': 'darken-2'}`"
                           label
                           text-color="white"
                         >
@@ -177,20 +178,20 @@
               <v-card v-if="selectedPaymentType == 3" >
                 <v-card-title><h2>
                   <span class="text-lg-h6">
-                  К оплате   {{ summ }}   ₽   
+                  К оплате   {{ sum }}   ₽   
                   </span> </h2>
                 </v-card-title>
                 <v-form @submit.prevent="printCheck('credit')">
                 <v-card-text>
                   <v-text-field
-                    ref="getFromCustomerCreditInput"
+                    ref="acceptedFromCustomerCreditInput"
                     prefix="₽"
-                    :placeholder="summ"
+                    :placeholder="sum"
                     append-icon="mdi-rub"
                     color="green lighten-2"
                     label="Сумма кредита"
-                    v-model="getFromCustomer.credit"
-                    :rules="getFromCustomerCreditRules"
+                    v-model="acceptedFromCustomer.credit"
+                    :rules="acceptedFromCustomerCreditRules"
                     v-on:keyup.38="up()"
                     v-on:keyup.40="down()"
                   ></v-text-field>  
@@ -201,12 +202,12 @@
                     color="success lighten-2"
                     large
                     elevation="1"
-                    :disabled="getFromCustomer.credit == '' ? false: Number(getFromCustomer.credit) != summ ? true: false"
+                    :disabled="acceptedFromCustomer.credit == '' ? false: Number(acceptedFromCustomer.credit) != sum ? true: false"
                     @click="printCheck('credit')"
                     type="submit"
                   >
                         <v-chip
-                           :color="`grey ${getFromCustomer.credit == '' ? 'darken-2': Number(getFromCustomer.credit) != summ ? 'lighten-1': 'darken-2'}`"
+                           :color="`grey ${acceptedFromCustomer.credit == '' ? 'darken-2': Number(acceptedFromCustomer.credit) != sum ? 'lighten-1': 'darken-2'}`"
                           label
                           text-color="white"
                         >
@@ -225,20 +226,20 @@
               <v-card v-if="selectedPaymentType == 4">
                 <v-card-title><h2>
                   <span class="text-lg-h6">
-                  К оплате   {{ summ }}   ₽   
+                  К оплате   {{ sum }}   ₽   
                   </span> </h2>
                 </v-card-title>
                 <v-form @submit.prevent="printCheck('other')">
                 <v-card-text>
                   <v-text-field
-                    ref="getFromCustomerOtherInput"
+                    ref="acceptedFromCustomerOtherInput"
                     prefix="₽"
-                    :placeholder="summ"
+                    :placeholder="sum"
                     append-icon="mdi-rub"
                     color="green"
                     label="Сумма встречного представления"
-                    v-model="getFromCustomer.other"
-                    :rules="getFromCustomerOtherRules"
+                    v-model="acceptedFromCustomer.other"
+                    :rules="acceptedFromCustomerOtherRules"
                     v-on:keyup.38="up()"
                     v-on:keyup.40="down()"
                   ></v-text-field>  
@@ -249,12 +250,12 @@
                     color="success lighten-2"
                     large
                     elevation="1"
-                    :disabled="getFromCustomer.other == '' ? false: Number(getFromCustomer.other) != summ ? true: false"
+                    :disabled="acceptedFromCustomer.other == '' ? false: Number(acceptedFromCustomer.other) != sum ? true: false"
                     @click="printCheck('other')"
                     type="submit"
                   >
                         <v-chip
-                           :color="`grey ${getFromCustomer.other == '' ? 'darken-2': Number(getFromCustomer.other) != summ ? 'lighten-1': 'darken-2'}`"
+                           :color="`grey ${acceptedFromCustomer.other == '' ? 'darken-2': Number(acceptedFromCustomer.other) != sum ? 'lighten-1': 'darken-2'}`"
                           label
                           text-color="white"
                         >
@@ -274,14 +275,14 @@
                 <v-card-title>
                   <h2>
                   <span class="text-lg-h6">
-                  К оплате   {{ summ }}   ₽   
+                  К оплате   {{ sum }}   ₽   
                   </span> </h2>
                 </v-card-title>
                 
 <v-card-text>
-             <span v-if="Number(getFromCustomer.cash) + Number(getFromCustomer.electronically) + Number(getFromCustomer.prepaid) + Number(getFromCustomer.credit) + Number(getFromCustomer.other) < summ">
+             <span v-if="Number(acceptedFromCustomer.cash) + Number(acceptedFromCustomer.electronically) + Number(acceptedFromCustomer.prepaid) + Number(acceptedFromCustomer.credit) + Number(acceptedFromCustomer.other) < sum">
                     Для комбооплаты распределите  
-                     {{ summ - getFromCustomer.cash - getFromCustomer.electronically - getFromCustomer.prepaid - getFromCustomer.credit - getFromCustomer.other }} ₽
+                     {{ sum - acceptedFromCustomer.cash - acceptedFromCustomer.electronically - acceptedFromCustomer.prepaid - acceptedFromCustomer.credit - acceptedFromCustomer.other }} ₽
                   </span>
 
 
@@ -336,12 +337,11 @@ import paymentTypes from '../resources/paymentsTypes'
 export default {
   components: { alert },
     name: 'payment',
-    props: ['summ'],
+    props: ['sum'],
     data() {
       return {
         paymentTypes,
-        paymentType: [],
-        getFromCustomer: {
+        acceptedFromCustomer: {
           cash: "",
           electronically: "",
           prepaid: "",
@@ -361,85 +361,97 @@ export default {
       paymentTypesDefault() {
         return this.$store.state.settings.mainSettings.paymentTypesDefault
       },
-      getFromCustomerCashRules() {      
-        if (isNaN(Number(this.getFromCustomer.cash))) {
+      items() {
+        return this.$store.state.check.items
+      },
+      taxations() {
+        let taxations = []
+        this.items.forEach(element => {
+          if (!taxations.includes(element.taxationType)) {
+            taxations.push(element.taxationType)
+          }          
+        });
+        return taxations
+      },
+      acceptedFromCustomerCashRules() {      
+        if (isNaN(Number(this.acceptedFromCustomer.cash))) {
           return ['Некорректное значение']
         } else {
-          if (this.getFromCustomer.cash == "") {
+          if (this.acceptedFromCustomer.cash == "") {
             return []  
           } else {
             return [v => Number(v) > 0 || 'Некорректное значение']
           }              
         }      
       },
-      getFromCustomerElectronicallyRules() {      
-        if (isNaN(Number(this.getFromCustomer.electronically))) {
+      acceptedFromCustomerElectronicallyRules() {      
+        if (isNaN(Number(this.acceptedFromCustomer.electronically))) {
           return ['Некорректное значение']
         } else {
-          if (this.getFromCustomer.electronically == "") {
+          if (this.acceptedFromCustomer.electronically == "") {
             return []  
           } else {
             return [
               v => Number(v) > 0 || 'Некорректное значение',
-              v => Number(v) <= this.summ || 'Сумма безналичного платежа не может превышать сумму покупки'
+              v => Number(v) <= this.sum || 'Сумма безналичного платежа не может превышать сумму покупки'
             ]
           }              
         }      
       },
-      getFromCustomerPrepaidRules() {      
-        if (isNaN(Number(this.getFromCustomer.prepaid))) {
+      acceptedFromCustomerPrepaidRules() {      
+        if (isNaN(Number(this.acceptedFromCustomer.prepaid))) {
           return ['Некорректное значение']
         } else {
-          if (this.getFromCustomer.prepaid == "") {
+          if (this.acceptedFromCustomer.prepaid == "") {
             return []  
           } else {
             return [
               v => Number(v) > 0 || 'Некорректное значение',
-              v => Number(v) <= this.summ || 'Сумма предоплаты не может превышать сумму покупки'
+              v => Number(v) <= this.sum || 'Сумма предоплаты не может превышать сумму покупки'
             ]
           }              
         }         
       },
-      getFromCustomerCreditRules() {      
-        if (isNaN(Number(this.getFromCustomer.credit))) {
+      acceptedFromCustomerCreditRules() {      
+        if (isNaN(Number(this.acceptedFromCustomer.credit))) {
           return ['Некорректное значение']
         } else {
-          if (this.getFromCustomer.credit == "") {
+          if (this.acceptedFromCustomer.credit == "") {
             return []  
           } else {
             return [
               v => Number(v) > 0 || 'Некорректное значение',
-              v => Number(v) <= this.summ || 'Сумма кредита не может превышать сумму покупки'
+              v => Number(v) <= this.sum || 'Сумма кредита не может превышать сумму покупки'
             ]
           }              
         }            
       },
-      getFromCustomerOtherRules() {      
-        if (isNaN(Number(this.getFromCustomer.other))) {
+      acceptedFromCustomerOtherRules() {      
+        if (isNaN(Number(this.acceptedFromCustomer.other))) {
           return ['Некорректное значение']
         } else {
-          if (this.getFromCustomer.other == "") {
+          if (this.acceptedFromCustomer.other == "") {
             return []  
           } else {
             return [
               v => Number(v) > 0 || 'Некорректное значение',
-              v => Number(v) <= this.summ || 'Сумма встречного представления не может превышать сумму покупки'
+              v => Number(v) <= this.sum || 'Сумма встречного представления не может превышать сумму покупки'
             ]
           }              
         }      
       },
-      getFromCustomerFocus() {        
+      acceptedFromCustomerFocus() {        
         return this.$store.getters['payment/cashInputFocus']
       }
     },
     watch: {
-      'getFromCustomerFocus': function() {
+      'acceptedFromCustomerFocus': function() {
         this.setFocus()
       }
     },
     methods: {
       printCheck(type) {
-        if (Number(this.getFromCustomer.electronically) + Number(this.getFromCustomer.prepaid) + Number(this.getFromCustomer.credit) + Number(this.getFromCustomer.other) > this.summ) {
+        if (Number(this.acceptedFromCustomer.electronically) + Number(this.acceptedFromCustomer.prepaid) + Number(this.acceptedFromCustomer.credit) + Number(this.acceptedFromCustomer.other) > this.sum) {
           this.alert = {
             show: true,
             timeout: 3000,
@@ -447,7 +459,7 @@ export default {
             text: 'Сумма всех оплат за исключением наличных не может привышать сумму чека'
           }
           return
-        } else if ((this.selectedPaymentType == 5) && (Number(this.getFromCustomer.cash) + Number(this.getFromCustomer.electronically) + Number(this.getFromCustomer.prepaid) + Number(this.getFromCustomer.credit) + Number(this.getFromCustomer.other) < this.summ)) {
+        } else if ((this.selectedPaymentType == 5) && (Number(this.acceptedFromCustomer.cash) + Number(this.acceptedFromCustomer.electronically) + Number(this.acceptedFromCustomer.prepaid) + Number(this.acceptedFromCustomer.credit) + Number(this.acceptedFromCustomer.other) < this.sum)) {
           this.alert = {
             show: true,
             timeout: 3000,
@@ -456,45 +468,85 @@ export default {
           }
           return
         }
+
+        let payments = []
         
-        if ((type == 'cash') && (Number(this.getFromCustomer.cash) == 0)) {
-          this.$emit('print-check', { 
-            paymentType: this.paymentTypes[this.selectedPaymentType].value, 
-            getFromCustomer: Number(this.summ)
+        if ((type == 'cash') && (Number(this.acceptedFromCustomer.cash) == 0)) {
+          payments.push({ 
+            type: this.paymentTypes[this.selectedPaymentType].value, 
+            sum: Number(this.sum)
           })
-        } else if ((type == 'cash') && (Number(this.getFromCustomer.cash) > this.summ)) {
-          this.$emit('print-check', { 
-            paymentType: this.paymentTypes[this.selectedPaymentType].value, 
-            getFromCustomer: Number(this.getFromCustomer.cash)
+        } else if ((type == 'cash') && (Number(this.acceptedFromCustomer.cash) > this.sum)) {
+           payments.push({ 
+            type: this.paymentTypes[this.selectedPaymentType].value, 
+            sum: Number(this.acceptedFromCustomer.cash)
           })
         } else if (type == 'electronically') {
-          this.$emit('print-check', { 
-            paymentType: this.paymentTypes[this.selectedPaymentType].value, 
-            getFromCustomer: Number(this.summ)
+           payments.push({ 
+            type: this.paymentTypes[this.selectedPaymentType].value, 
+            sum: Number(this.sum)
           })
         } else if (type == 'prepaid') {
-          this.$emit('print-check', { 
-            paymentType: this.paymentTypes[this.selectedPaymentType].value, 
-            getFromCustomer: Number(this.summ)
+           payments.push({ 
+            type: this.paymentTypes[this.selectedPaymentType].value, 
+            sum: Number(this.sum)
           })
         } else if (type == 'credit') {
-          this.$emit('print-check', { 
-            paymentType: this.paymentTypes[this.selectedPaymentType].value, 
-            getFromCustomer: Number(this.summ)
+           payments.push({ 
+            type: this.paymentTypes[this.selectedPaymentType].value, 
+            sum: Number(this.sum)
           })
         } else if (type == 'other') {
-          this.$emit('print-check', { 
-            paymentType: this.paymentTypes[this.selectedPaymentType].value, 
-            getFromCustomer: Number(this.summ)
+           payments.push({ 
+            type: this.paymentTypes[this.selectedPaymentType].value, 
+            sum: Number(this.sum)
           })
         } else if (type == 'combo') {
-          this.$emit('print-check', { 
-            paymentType: this.getFromCustomer, 
-            getFromCustomer: Number(this.getFromCustomer.cash)
-          })
+
+            for (var key in this.acceptedFromCustomer ) {
+              console.log(this.acceptedFromCustomer[key])
+              payments.push({
+                  type: key,
+                  sum: Number(Number(this.acceptedFromCustomer[key]).toFixed(2))
+            })
+
         }
+        }
+
         
-        this.getFromCustomer = {
+
+/*
+        if ((type == 'cash') && (Number(this.acceptedFromCustomer.cash) == 0)) {
+          this.acceptedFromCustomer.cash = Number(this.sum)
+        } 
+         if ((type == 'cash') && (Number(this.acceptedFromCustomer.cash) > this.sum)) {
+          this.acceptedFromCustomer.cash = Number(this.acceptedFromCustomer.cash)          
+        } 
+         if (type == 'electronically') {
+          this.acceptedFromCustomer.electronically = Number(this.sum)
+        } 
+         if (type == 'prepaid') {
+          this.acceptedFromCustomer.prepaid = Number(this.sum)
+        } 
+         if (type == 'credit') {
+          this.acceptedFromCustomer.credit = Number(this.sum)
+        } 
+         if (type == 'other') {
+          this.acceptedFromCustomer.other = Number(this.sum)
+        } 
+*/
+        
+
+       /*
+          
+        }*/
+        
+        console.log(payments)
+        this.$store.commit('check/setPayments', payments)
+
+        this.$emit('print-check')
+
+        this.acceptedFromCustomer = {
           cash: "",
           electronically: "",
           prepaid: "",
@@ -522,15 +574,15 @@ export default {
       setFocus() {
         let app = this
         if (this.selectedPaymentType == 0) {
-          setTimeout(()=> { app.$refs.getFromCustomerCashInput.focus() },1)
+          setTimeout(()=> { app.$refs.acceptedFromCustomerCashInput.focus() },1)
         } else if (this.selectedPaymentType == 1) {
-          setTimeout(()=> { app.$refs.getFromCustomerElectronicallyInput.focus() },1)
+          setTimeout(()=> { app.$refs.acceptedFromCustomerElectronicallyInput.focus() },1)
         } else if (this.selectedPaymentType == 2) {
-          setTimeout(()=> { app.$refs.getFromCustomerPrepaidInput.focus() },1)
+          setTimeout(()=> { app.$refs.acceptedFromCustomerPrepaidInput.focus() },1)
         } else if (this.selectedPaymentType == 3) {
-          setTimeout(()=> { app.$refs.getFromCustomerCreditInput.focus() },1)
+          setTimeout(()=> { app.$refs.acceptedFromCustomerCreditInput.focus() },1)
         } else if (this.selectedPaymentType == 4) {
-          setTimeout(()=> { app.$refs.getFromCustomerOtherInput.focus() },1)
+          setTimeout(()=> { app.$refs.acceptedFromCustomerOtherInput.focus() },1)
         } else if (this.selectedPaymentType == 5) {
           setTimeout(()=> { app.$refs.combo.focus() },1)
         } 

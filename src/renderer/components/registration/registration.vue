@@ -34,7 +34,19 @@
           v-bind:class="[activeItem == key ? 'primary--text' : '', 'row text-center']"
         >
           <v-col cols="3" class="text-left">
-              <span v-bind:class="activeItem == key ? 'font-weight-bold' : ''"> {{ item.title }} </span>            
+              <span v-bind:class="activeItem == key ? 'font-weight-bold' : ''"> {{ item.title }} </span> 
+              <span v-if="taxations.length > 1">
+                <br>
+                <v-chip
+                  class="ma-2"
+                  label
+                  dark
+                  :color='item.taxationType ? taxationTypes.find(type => type.value == item.taxationType).color : ""'
+                  x-small
+                >
+                  {{ item.taxationType ? taxationTypes.find(type => type.value == item.taxationType).text : ""}}
+                </v-chip>
+              </span>
           </v-col>
           <v-col cols="1">
             <span v-bind:class="activeItem == key ? 'font-weight-bold' : ''">  {{ Number(item.price).toFixed(2) }} ₽  </span>             
@@ -97,48 +109,50 @@
 
 
     <div class="footer-bar" >
-      <v-toolbar dark color="green lighten-5" class="tool-bar-custom">    
-        <v-toolbar-items >
+        <v-toolbar
+          color="green lighten-5"
+          dark
+          class="custom-toolbar"
+        >
+          <v-toolbar-items>
+            <v-tooltip top>
+              <template v-slot:activator="{ on, attrs }">
+                <v-btn  v-bind="attrs" v-on="on" @click="dialogAddItemFromBase = true" icon color="success">
+                    <v-icon>mdi-view-grid-plus</v-icon>
+                  </v-btn>
+              </template>
+              <span>Добавить из базы</span>
+            </v-tooltip>
+            
+            <v-tooltip top>
+              <template v-slot:activator="{ on, attrs }">
+                <v-btn  v-bind="attrs" v-on="on" @click="dialogCheckSettings = true" icon color="primary">
+                    <v-icon>mdi-settings</v-icon>
+                  </v-btn>
+              </template>
+              <span>Настройки чека</span>
+            </v-tooltip>
 
-          <v-tooltip top>
-            <template v-slot:activator="{ on, attrs }">
-              <v-btn  v-bind="attrs" v-on="on" @click="dialogAddItemFromBase = true" icon color="success">
-                  <v-icon>mdi-view-grid-plus</v-icon>
-                </v-btn>
-            </template>
-            <span>Добавить из базы</span>
-          </v-tooltip>
+            <v-tooltip top>
+              <template v-slot:activator="{ on, attrs }">
+                <v-btn  v-bind="attrs" v-on="on" @click="clearCheck()" icon color="error">
+                    <v-icon>mdi-sticker-remove-outline</v-icon>
+                  </v-btn>
+              </template>
+              <span>Очистить чек</span>
+            </v-tooltip>
+
+            <v-dialog eager
+              v-model="dialogAddItemFromBase"
+              width="90%"
+            >
+              <add-item-from-base @item-selected="itemSelected"></add-item-from-base>
+            </v-dialog>
+          </v-toolbar-items>
+          <v-spacer></v-spacer>
+
           
-          <v-tooltip top>
-            <template v-slot:activator="{ on, attrs }">
-              <v-btn  v-bind="attrs" v-on="on" @click="dialogCheckSettings = true" icon color="primary">
-                  <v-icon>mdi-settings</v-icon>
-                </v-btn>
-            </template>
-            <span>Настройки чека</span>
-          </v-tooltip>
-
-          <v-tooltip top>
-            <template v-slot:activator="{ on, attrs }">
-              <v-btn  v-bind="attrs" v-on="on" @click="clearCheck()" icon color="error">
-                  <v-icon>mdi-sticker-remove-outline</v-icon>
-                </v-btn>
-            </template>
-            <span>Очистить чек</span>
-          </v-tooltip>
-
-          <v-dialog eager
-            v-model="dialogAddItemFromBase"
-            width="90%"
-          >
-            <add-item-from-base @item-selected="itemSelected"></add-item-from-base>
-          </v-dialog>
-
-        </v-toolbar-items>
-          
-        <v-spacer></v-spacer>
-
-        <v-toolbar-items class="px-0">
+         <v-toolbar-items>
           <v-btn width="350px" @click="toPayment()"  color="green lighten-2">
             <v-chip
               class="ma-2"
@@ -151,10 +165,10 @@
               </v-icon>
                 Enter
             </v-chip>
-            <h3> К оплате:  {{ summ }} ₽ </h3>
+            <h3> К оплате:  {{ sum }} ₽ </h3>
           </v-btn>
-        </v-toolbar-items>
-      </v-toolbar>
+         </v-toolbar-items>
+        </v-toolbar>
     </div>
 
     <!-- payment cards -->
@@ -165,7 +179,7 @@
       v-model="dialogPayment"  
       v-on:click:outside="barcodeInputFocus"
     >
-      <payment @print-check="printCheck" :summ="summ" />
+      <payment @print-check="printCheck" :sum="sum" />
     </v-dialog>
 
 
@@ -236,10 +250,7 @@
 
     <fiscal-printer 
       @check-printed="checkWasPrinted" 
-      :print="print" 
-      :summ="summ" 
-      :paymentType="paymentType" 
-      :getFromCustomer="getFromCustomer" 
+      :print="print"
     />
 
     <alert :alert="alert"/>
@@ -258,6 +269,9 @@ import SetMark from './set-mark'
 import Alert from '../alerts/alert'
 import CheckSettings from './check-settings.vue'
 import Payment from './payment.vue'
+
+import taxationTypes from '../resources/taxationTypesMin'
+
 export default {
   name: 'registration',
   components: {
@@ -267,6 +281,7 @@ export default {
   },
   data() {
     return {
+      taxationTypes,
       mdiDataMatrix,    
       dialogAddItemFromBase: false,
       dialogPayment: false,
@@ -278,10 +293,12 @@ export default {
       nomenclatureCode: "",
       currentMarkItem: null,  
       paymentType: '',
-      getFromCustomer: '',    
+      acceptedFromCustomer: '',    
       quantity: "",
       quantityOfSelectedItem: "",
-      print: false,
+      print: {
+        check:false
+      },
       alert: {
         show: false,
         timeout: 2000,
@@ -313,17 +330,26 @@ export default {
         this.$store.commit('check/setActiveItem', v)
       }
     },  
-    summ() {
-      let summ = 0;
+    sum() {
+      let sum = 0;
       if (this.items.length) {
         this.items.forEach(item => {
-          summ = summ + (item.price * item.quantity)
+          sum = sum + (item.price * item.quantity)
         });
       }        
-      return summ.toFixed(2)
+      return sum.toFixed(2)
     },
     items() {
         return this.$store.state.check.items
+    },
+    taxations() {
+        let taxations = []
+        this.items.forEach(element => {
+          if (!taxations.includes(element.taxationType)) {
+            taxations.push(element.taxationType)
+          }          
+        });
+        return taxations
     },
     quantityRules() {      
       if (isNaN(Number(this.quantity))) {
@@ -351,11 +377,11 @@ export default {
     changeQuantity(item, changing) {
       this.$store.dispatch('check/changeQuantity', [ item, changing ])      
     },
-    printCheck(data) {
+    printCheck() {
       console.log("Registration: print check")
-      this.paymentType = data.paymentType
-      this.getFromCustomer = data.getFromCustomer
-      this.print = true     
+      //this.paymentType = data.paymentType
+     // this.acceptedFromCustomer = data.acceptedFromCustomer
+      this.print.check = true     
       this.dialogPayment = false
       this.barcodeInputFocus() 
     },
@@ -363,12 +389,12 @@ export default {
       console.log('!', result)
       this.alert = result
       if (result.type == "success") {
-        this.print = false
+        this.print.check = false
         
         this.barcodeInputFocus()
         this.clearCheck()
       } else {
-        this.print = false
+        this.print.check = false
         this.barcodeInputFocus()
       }
     },
@@ -376,9 +402,9 @@ export default {
       let app = this
       setTimeout(function() { app.$store.commit('itemAdditionManager/barcodeInputFocus') }, 1)
     },
-    getFromCustomerFocus() {
+    acceptedFromCustomerFocus() {
       let app = this
-      setTimeout(function() { app.$refs.getFromCustomerInput.focus() }, 1)
+      setTimeout(function() { app.$refs.acceptedFromCustomerInput.focus() }, 1)
     },
     toPayment() {
       if (!this.items.length) {        
@@ -412,7 +438,7 @@ export default {
     },
     closeDialogPayment() {
       this.dialogPayment = false
-      this.getFromCustomer = ""
+      this.acceptedFromCustomer = ""
       let app = this
       setTimeout(function() { app.$store.commit('itemAdditionManager/barcodeInputFocus') }, 1)
     },
@@ -444,14 +470,14 @@ export default {
 }
 
 .check-items {
-  height: 80%;
+  height: 80vh;
   overflow: auto
 }
 .footer-bar {
-  height: 10%;
-} 
-.tool-bar-custom {
-height: 100%;
+  height: 10vh;
+}
+.custom-toolbar {
+  height: 100%;
 }
 </style>
 

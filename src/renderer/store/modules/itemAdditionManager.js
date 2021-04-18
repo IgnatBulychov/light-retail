@@ -42,11 +42,11 @@ const mutations = {
     state.liveStep = 'quantitySetting'
     console.log(state.liveStep)
   },
-  setNomenclatureCode(state, [ gtin, serial, nomenclatureCode, raw ]) {
-    state.item.gtin = gtin
-    state.item.serial = serial
-    state.item.nomenclatureCode = nomenclatureCode
-    state.item.rawDatamatrix = raw
+  setNomenclatureCode(state, data) {
+    state.item.gtin = data.gtin
+    state.item.serial = data.serial
+    state.item.nomenclatureCode = data.nomenclatureCode
+    state.item.rawDatamatrix = data.rawDatamatrix
     console.log('end Item')
   }
 }

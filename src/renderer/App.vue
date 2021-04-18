@@ -8,7 +8,7 @@
 
 <script>
   export default {
-    name: 'cm',
+    name: 'LiteRetail',
     created() {
      
     }

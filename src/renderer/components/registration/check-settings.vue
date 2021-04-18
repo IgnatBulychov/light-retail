@@ -18,12 +18,12 @@
             v-model="checkType"
           ></v-select>     
 
-          <v-select
+         <!-- <v-select
             :items="taxationTypes"
             label="СНО чека"
             v-model="taxationType"
             
-          ></v-select>           
+          ></v-select>       -->    
 
         </v-form>
           <div v-if="customer">
@@ -152,7 +152,7 @@ export default {
   customerVatinRules() {
     if (this.customer.vatin) {
       return [
-        v => (v.length == 0 || v.length == 12) || 'Некорректный ИНН',
+        v => (v.length == 0 || v.length == 12 ||  v.length == 10) || 'Некорректный ИНН',
         v =>  /^\d+$/.test(v) || 'Некорректный ИНН'       
       ]
     } else {

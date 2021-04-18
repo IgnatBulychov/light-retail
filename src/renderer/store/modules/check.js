@@ -9,6 +9,7 @@ const state = {
     taxationType: '',    
     customer: false,
   },
+  payments: [],
   alert: {
     show: false,
     type: "success",
@@ -41,6 +42,10 @@ const mutations = {
   setTaxationType(state, taxationType) {
     state.checkSettings.taxationType = taxationType
     state.taxationTypeDefault = taxationType
+  },
+  setPayments(state, payments) {
+    console.log('payments set:', payments)
+    state.payments = payments
   },
   setCustomer(state, customer) {
     state.checkSettings.customer = customer

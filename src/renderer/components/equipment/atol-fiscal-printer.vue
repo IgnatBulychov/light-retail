@@ -9,22 +9,21 @@ const fptr = new w.Fptr10();
 const remote = require('electron').remote;
 const application = remote.app;
 import Alert from '../alerts/alert'
-
+var hex64 = require('hex64');
 export default {
     name: 'atol-fiscal-printer',
-    props:[ 'printAtol', 'summ', 'getFromCustomer', 'paymentType'],
+    props:[ 'print', "checks", "cash"],
     components: {
-              Alert
+      Alert
     },
     data() {
         return {
-           alert: {
+          alert: {
             show: false,
             timeout: 2000,
             type: "success",
             text: ''
-          },
-          lodaing: false
+          }
         }
     },
     destroyed() {
@@ -42,14 +41,11 @@ export default {
       settings.IPAddress = this.currentFiscalPrinter.settings.IPAddress;
       settings.IPPort = this.currentFiscalPrinter.settings.IPPort;
       console.log('setSettings', fptr.setSettings(settings));
-      console.log('getSettings',fptr.getSettings());
+      console.log('getSettings',fptr.getSettings())
       
-      this.alert = {
-          show: true,
-          timeout: 3000,
-          type: "error",
-          text: fptr.open()
-        }
+
+      
+      
     },
     computed: {
       currentFiscalPrinter() {
@@ -61,40 +57,70 @@ export default {
       currentUser() {
         return this.$store.state.users.currentUser
       },
-      taxationType() {
+      /*taxationType() {
           return this.$store.state.check.checkSettings.taxationType
-      },
+      },*/
       checkType() {
           return this.$store.state.check.checkSettings.checkType
       },
       customer() {
           return this.$store.state.check.checkSettings.customer
       },
+      /*payments() {
+          return this.$store.state.check.payments
+      },*/
     },
     watch: {
-      'printAtol': function () {
-          let app = this 
-          console.log("печать чека Атол")
-          if (app.printAtol) {
-            app.printCheck()
+      'print.check': function () {
+          console.log("Печать кассового чека Атол")
+          if (this.print.check) {
+            this.checks.forEach(check => {
+              this.printCheck(check)
+            });            
           } 
-          
+      },
+      'print.openShift': function () {
+          console.log("печать Открытия смены Атол")
+          if (this.print.openShift) {
+            this.openShift()
+          }           
+      },
+      'print.reportX': function () {
+          console.log("печать X отчета Атол")
+          if (this.print.reportX) {
+            this.reportX()
+          }           
+      },
+      'print.closeShift': function () {
+          console.log("печать Закрытия смены Атол")
+          if (this.print.closeShift) {
+            this.closeShift()
+          }           
+      },
+      'print.cashIn': function () {
+          console.log("печать внесения Атол")
+          if (this.print.cashIn) {
+            this.cashIn()
+          }           
+      },
+      'print.cashOut': function () {
+          console.log("печать изъятия Атол")
+          if (this.print.cashOut) {
+            this.cashOut()
+          }           
       }
     },
     methods: {
-      printCheck() {
-        this.alert = {
-          show: false,
-          timeout: 3000,
-          type: "error",
-          text: 'Нет связи с кассой'
-        }
+      printCheck(checkData) {
+
+        
+       
         let app = this
 
         let check = {}
 
         check.type = app.checkType
-        check.taxationType = app.taxationType
+        check.taxationType = checkData.taxationType
         check.operator = {
           name: ""
         }
@@ -114,59 +140,75 @@ export default {
 
         check.items = []
 
-        for (let i = 0; i < app.items.length; i++) {
+        for (let i = 0; i < checkData.items.length; i++) {
             
             check.items.push({
               type: "position",
-              name: app.items[i].title,
-              price: Number(Number(app.items[i].price).toFixed(2)),
-              quantity: Number(app.items[i].quantity),
-              amount: Number(Number(app.items[i].quantity*app.items[i].price).toFixed(2)),
+              name: checkData.items[i].title,
+              price: Number(Number(checkData.items[i].price).toFixed(2)),
+              quantity: Number(checkData.items[i].quantity),
+              amount: Number(Number(checkData.items[i].quantity*checkData.items[i].price).toFixed(2)),
               tax: {
                   type: app.items[i].tax
               },
-              nomenclatureCode: app.items[i].nomenclatureCode,
-              paymentMethod: app.items[i].paymentMethod,
-              paymentObject: app.items[i].itemType
+              //mark: hex64.toBase64(checkData.items[i].rawDatamatrix),
+              nomenclatureCode: checkData.items[i].nomenclatureCode,
+              paymentMethod: checkData.items[i].paymentMethod,
+              paymentObject: checkData.items[i].itemType
             })
 
-            if (app.items[i].agencyScheme.agents.length) {
-              check.items[i].agentInfo = {}
-              check.items[i].agentInfo.agents = app.items[i].agencyScheme.agents
-              check.items[i].agentInfo.payingAgent = app.items[i].agencyScheme.payingAgent
-              check.items[i].agentInfo.receivePaymentsOperator = app.items[i].agencyScheme.receivePaymentsOperator
-              check.items[i].agentInfo.moneyTransferOperator = app.items[i].agencyScheme.moneyTransferOperator
-            }
-            if (app.items[i].agencyScheme.supplier) {
-              check.items[i].supplierInfo = {}
-              check.items[i].supplierInfo.phones = app.items[i].agencyScheme.supplier.phones
-              check.items[i].supplierInfo.name = app.items[i].agencyScheme.supplier.name
-              check.items[i].supplierInfo.vatin = app.items[i].agencyScheme.supplier.vatin
-            }
+            if (checkData.items[i].agencyScheme) {
+              if (checkData.items[i].agencyScheme.agents.length) {
+                check.items[i].agentInfo = {}
+                check.items[i].agentInfo.agents = checkData.items[i].agencyScheme.agents
+                check.items[i].agentInfo.payingAgent = checkData.items[i].agencyScheme.payingAgent
+                check.items[i].agentInfo.receivePaymentsOperator = checkData.items[i].agencyScheme.receivePaymentsOperator
+                check.items[i].agentInfo.moneyTransferOperator = checkData.items[i].agencyScheme.moneyTransferOperator
+              }
+              if (checkData.items[i].agencyScheme.supplier) {
+                check.items[i].supplierInfo = {}
+                check.items[i].supplierInfo.phones = checkData.items[i].agencyScheme.supplier.phones
+                check.items[i].supplierInfo.name = checkData.items[i].agencyScheme.supplier.name
+                check.items[i].supplierInfo.vatin = checkData.items[i].agencyScheme.supplier.vatin
+              }
+            }            
         }
         
-        check.payments = []
-
+        check.payments = checkData.payments
+/*
 //если строка, то уже определен тип, если обьект - то комбооплата
         if (typeof app.paymentType == 'string') {
           check.payments.push({
               "type": app.paymentType,
-              "sum": Number(app.getFromCustomer).toFixed(2)
+              "sum": Number(Number(app.getFromCustomer).toFixed(2))
           })
         } else {
           for (var key in app.paymentType) {
             if (app.paymentType[key]) {
               check.payments.push({
                   "type": key,
-                  "sum": Number(app.paymentType[key]).toFixed(2)
+                  "sum": Number(Number(app.paymentType[key]).toFixed(2))
               })
             }
           }
           
-        }
+        }*/
 
         fs.appendFile(application.getPath('userData') + "/logs/checks.txt", new Date().toLocaleString().replace(/:/g, '-') + " JSON: " + JSON.stringify(check) + "\n \n", function (err) {})            
 
+try {
+          fptr.open()
+        } catch (e) {
+          this.alert = {
+            show: true,
+            timeout: 3000,
+            type: "error",
+            text: e.message + " " + e.code + " " + e.description
+          }
+          fptr.close() 
+          return
+        }
+        
         fptr.processJsonAsync(
         check,
         (err, result) => {
@@ -177,59 +219,254 @@ export default {
               timeout: 3000,
               type: "error",
               text: 'Нет связи с кассой'
-            })             
-            fptr.close()   
+            })   
+            fptr.close() 
             throw err;
           } else {
-            fptr.close()   
+               
             app.$emit('check-printed-atol', {
               show: true,
               timeout: 3000,
               type: "success",
               text: 'Операция выполнена'
             })       
+            fptr.close()
           }
         });
 
-        },
-        openShift() {
-          let app = this
-          app.lodaing = true
-          let task = {}
-          task.type = "openShift"
-          task.operator = {}
-          task.operator.name = app.currentUser.name
-          if (task.operator.vatin) {
-            task.operator.vatin = app.currentUser.vatin
+      },
+      openShift() {
+        try {
+          fptr.open()
+        } catch (e) {
+          this.alert = {
+            show: true,
+            timeout: 3000,
+            type: "error",
+            text: e.message + " " + e.code + " " + e.description
           }
-          fptr.processJsonAsync(
-          task,
-          (err, result) => {
-            if (err) {
-              app.lodaing = false
-              app.$emit('check-printed-atol',{
-                show: true,
-                timeout: 3000,
-                type: "error",
-                text: 'Нет связи с кассой'
-              }) 
-              fptr.close()   
-              throw err;
-            } else {
-              app.lodaing = false
-              console.log('reportX', result);  
-              app.$emit('check-printed-atol', {
-                show: true,
-                timeout: 3000,
-                type: "success",
-                text: 'Операция выполнена'
-              }) 
-              fptr.close()      
-            }
-          });
-          
-          fs.writeFileSync(application.getPath('userData') + "/logs/" + new Date().toLocaleString().replace(/:/g, '-') + "-openShift.log", task)
-        },
+          fptr.close() 
+          return
+        }
+        let app = this
+        let task = {}
+        task.type = "openShift"
+        task.operator = {}
+        task.operator.name = app.currentUser.name
+        if (task.operator.vatin) {
+          task.operator.vatin = app.currentUser.vatin
+        }
+        fptr.processJsonAsync(
+        task,
+        (err, result) => {
+          if (err) {
+            app.$emit('check-printed-atol',{
+              show: true,
+              timeout: 3000,
+              type: "error",
+              text: 'Нет связи с кассой'
+            }) 
+            fptr.close()
+            throw err;
+          } else {
+            app.$emit('check-printed-atol', {
+              show: true,
+              timeout: 3000,
+              type: "success",
+              text: 'Операция выполнена'
+            }) 
+            fptr.close()    
+          }
+        });
+        fs.appendFile(application.getPath('userData') + "/logs/openShift.txt", new Date().toLocaleString().replace(/:/g, '-') + " JSON: " + JSON.stringify(task) + "\n \n", function (err) {}) 
+      },
+      reportX() {
+         try {
+          fptr.open()
+        } catch (e) {
+          this.alert = {
+            show: true,
+            timeout: 3000,
+            type: "error",
+            text: e.message + " " + e.code + " " + e.description
+          }
+          fptr.close() 
+          return
+        }
+        let app = this
+        app.reportXLodaing = true
+        let task = {}
+        task.type = "reportX"
+        task.operator = {}
+        task.operator.name = app.currentUser.name
+        if (task.operator.vatin) {
+          task.operator.vatin = app.currentUser.vatin
+        }
+        fptr.processJsonAsync(
+        task,
+        (err, result) => {
+          if (err) {
+            app.$emit('check-printed-atol',{
+              show: true,
+              timeout: 3000,
+              type: "error",
+              text: 'Нет связи с кассой'
+            }) 
+            fptr.close() 
+            throw err;
+          } else {
+            app.$emit('check-printed-atol', {
+              show: true,
+              timeout: 3000,
+              type: "success",
+              text: 'Операция выполнена'
+            })
+            fptr.close() 
+            console.log('reportX', result);        
+          }
+        });
+        fs.appendFile(application.getPath('userData') + "/logs/reportX.txt", new Date().toLocaleString().replace(/:/g, '-') + " JSON: " + JSON.stringify(task) + "\n \n", function (err) {}) 
+      },
+      closeShift() {
+         try {
+          fptr.open()
+        } catch (e) {
+          this.alert = {
+            show: true,
+            timeout: 3000,
+            type: "error",
+            text: e.message + " " + e.code + " " + e.description
+          }
+          fptr.close() 
+          return
+        }
+        let app = this
+        let task = {}
+        task.type = "closeShift"
+        task.operator = {}
+        task.operator.name = app.currentUser.name
+        if (task.operator.vatin) {
+          task.operator.vatin = app.currentUser.vatin
+        }
+        fptr.processJsonAsync(
+        task,
+        (err, result) => {
+          if (err) {
+            app.$emit('check-printed-atol',{
+              show: true,
+              timeout: 3000,
+              type: "error",
+              text: 'Нет связи с кассой'
+            }) 
+            fptr.close()
+            throw err;
+          } else {
+            app.$emit('check-printed-atol', {
+              show: true,
+              timeout: 3000,
+              type: "success",
+              text: 'Операция выполнена'
+            })
+            fptr.close()  
+            console.log('closeShift', result);        
+          }
+        });
+       fs.appendFile(application.getPath('userData') + "/logs/closeShift.txt", new Date().toLocaleString().replace(/:/g, '-') + " JSON: " + JSON.stringify(task) + "\n \n", function (err) {}) 
+      },
+      cashIn() {
+         try {
+          fptr.open()
+        } catch (e) {
+          this.alert = {
+            show: true,
+            timeout: 3000,
+            type: "error",
+            text: e.message + " " + e.code + " " + e.description
+          }
+          fptr.close() 
+          return
+        }
+        let app = this
+        let task = {}
+        task.type = "cashIn"
+        task.operator = {}
+        task.operator.name = app.currentUser.name
+        if (task.operator.vatin) {
+          task.operator.vatin = app.currentUser.vatin
+        }
+        task.cashSum = Number(Number(app.cash).toFixed(2)),
+        fptr.processJsonAsync(
+        task,
+        (err, result) => {
+          if (err) {
+            app.$emit('check-printed-atol',{
+              show: true,
+              timeout: 3000,
+              type: "error",
+              text: 'Нет связи с кассой'
+            }) 
+            fptr.close()
+            throw err;
+          } else {
+            app.$emit('check-printed-atol', {
+              show: true,
+              timeout: 3000,
+              type: "success",
+              text: 'Операция выполнена'
+            })
+            fptr.close() 
+            console.log('cashIn', result);        
+          }
+        });
+        fs.appendFile(application.getPath('userData') + "/logs/cashIn.txt", new Date().toLocaleString().replace(/:/g, '-') + " JSON: " + JSON.stringify(task) + "\n \n", function (err) {}) 
+      },
+      cashOut() {
+         try {
+          fptr.open()
+        } catch (e) {
+          this.alert = {
+            show: true,
+            timeout: 3000,
+            type: "error",
+            text: e.message + " " + e.code + " " + e.description
+          }
+          fptr.close() 
+          return
+        }
+        let app = this
+        let task = {}
+        task.type = "cashOut"
+        task.operator = {}
+        task.operator.name = app.currentUser.name
+        if (task.operator.vatin) {
+          task.operator.vatin = app.currentUser.vatin
+        }
+        task.cashSum = Number(Number(app.cash).toFixed(2)),
+        fptr.processJsonAsync(
+        task,
+        (err, result) => {
+          if (err) {
+            app.$emit('check-printed-atol',{
+              show: true,
+              timeout: 3000,
+              type: "error",
+              text: 'Нет связи с кассой'
+            }) 
+            fptr.close()
+            throw err;
+          } else {
+            app.$emit('check-printed-atol', {
+              show: true,
+              timeout: 3000,
+              type: "success",
+              text: 'Операция выполнена'
+            })
+            fptr.close()  
+            console.log('cashOut', result);        
+          }
+        });
+        fs.appendFile(application.getPath('userData') + "/logs/cashOut.txt", new Date().toLocaleString().replace(/:/g, '-') + " JSON: " + JSON.stringify(task) + "\n \n", function (err) {}) 
+      },
     }
 }
 </script>

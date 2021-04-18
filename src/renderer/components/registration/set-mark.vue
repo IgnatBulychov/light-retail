@@ -145,7 +145,7 @@ export default {
         
         
         createTag1162(app.datamatrixCode).then(result => {   
-             app.$store.commit('itemAdditionManager/setNomenclatureCode', [ result.gtin, result.serial, result.nomenclatureCode, result.raw ])     
+             app.$store.commit('itemAdditionManager/setNomenclatureCode', { gtin:result.gtin, serial:result.serial, nomenclatureCode:result.nomenclatureCode, rawDatamatrix:result.rawDatamatrix })     
           app.$store.dispatch('check/addItemtoCheck', app.item)
            console.log('res') 
           app.datamatrixCode = ""

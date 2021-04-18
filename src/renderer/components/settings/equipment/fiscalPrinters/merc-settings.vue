@@ -57,6 +57,8 @@ import models from './resources-merc/models.js'
 import baudrates from './resources-merc/baudrates.js'
 import comPorts from './resources-merc/comPorts.js'
 import axios from 'axios'
+
+const SerialPort = require('serialport')
 export default {
   name: 'merc-settings',
   components: {
@@ -66,7 +68,7 @@ export default {
     return {
       models: models,
       baudrates: baudrates,
-      comPorts: comPorts,
+      comPorts: [],
       fiscalPrinter:{
         model: "Меркурий",
         active: true,
@@ -91,6 +93,7 @@ export default {
     
   },
   created() {
+      this.updatePorts() 
         let app = this
 
         var query = {
@@ -123,6 +126,25 @@ export default {
         });
   },
   methods: {
+    updatePorts() {
+         let app = this
+        SerialPort.list().then(  portsFromSerial => {
+          console.log(portsFromSerial)
+            let list = []
+            portsFromSerial.forEach(port => {
+              list.push({
+                text: port.path + " " + port.manufacturer,
+                value: port.path
+              })
+            })
+            if (list.length) {
+              app.comPorts = list
+            } 
+          },
+          err =>  {
+            
+          } )
+      },
     connectionTest() {
      let app = this
 

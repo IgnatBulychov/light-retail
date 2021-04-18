@@ -91,7 +91,7 @@
           <v-btn class="success" @click="createItem()">Создать товар</v-btn>
         </v-card-text>
 
-  <scanner-com-port @scan-data-matrix="scanFromComPortDataMatrix" @scan-ean13="scanFromComPortEan13" />
+  <scanner-com-port @scan-data-matrix="scanFromComPortDataMatrix" @scan-ean13="scanFromComPortEan13"  @scan-ean8="scanFromComPortEan8"/>
 
       </v-card>
 </template>
@@ -206,21 +206,18 @@ export default {
       scanFromComPortDataMatrix(code) {
         console.log('доб', code )
         let ean13 = Number(code.slice(3, 16))
-        if (this.dialogCreateItem) {
           this.item.barcodes.push(ean13)
-        } 
-        if (this.dialogUpdateItem) {
-          this.itemForUpdate.barcodes.push(ean13)
-        }
+        
       },
+      scanFromComPortEan8(code) {
+        console.log('доб', code )
+          this.item.barcodes.push(Number(code))
+        
+      },  
       scanFromComPortEan13(code) {
         console.log('доб', code )
-        if (this.dialogCreateItem) {
           this.item.barcodes.push(Number(code))
-        } 
-        if (this.dialogUpdateItem) {
-          this.itemForUpdate.barcodes.push(Number(code))
-        }
+       
       },   
       itemSeeder() {
         

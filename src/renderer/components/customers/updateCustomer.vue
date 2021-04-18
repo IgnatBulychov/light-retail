@@ -2,7 +2,7 @@
     <v-card>
       <v-card-title>
         <span class="text-lg-h6">
-            Изменение поставщика
+            Изменение клиента
         </span>
         <v-spacer></v-spacer>
         <v-btn icon @click="$emit('close-dialog')">

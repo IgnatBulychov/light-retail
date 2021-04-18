@@ -23,7 +23,7 @@
           <v-list-item-icon>
             <v-icon>mdi-printer-pos</v-icon>
           </v-list-item-icon>
-          <v-list-item-title>Регистрация</v-list-item-title>
+          <v-list-item-title>Продажа</v-list-item-title>
         </v-list-item>
         <v-list-item color="success" link to='/dashboard/reports'>
           <v-list-item-icon>
