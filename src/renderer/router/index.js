@@ -59,7 +59,17 @@ export default new Router({
                     path: 'suppliers',
                     name: 'suppliers',
                     component: require('@/components/suppliers/suppliers').default
-                  }
+                  },
+                  {
+                    path: 'registration-lk',
+                    name: 'registration-lk',
+                    component: require('@/components/lk/registration').default
+                  },
+                  {
+                    path: 'login-lk',
+                    name: 'login-lk',
+                    component: require('@/components/lk/login').default
+                  },
                  
                 ]
     },
